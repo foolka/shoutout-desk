@@ -1,0 +1,11 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {spawnSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..'),version=require('../package.json').version;
+const source=path.join(root,'release/ShoutoutDesk'),file=path.join(root,'release',`shoutout-desk-${version}-windows-x64-portable.zip`);
+if(!fs.existsSync(path.join(source,'ShoutoutDesk.exe')))throw Error('Build the app first.');
+const escape=value=>value.replaceAll("'","''");
+const script=`Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory('${escape(source)}','${escape(file)}',[IO.Compression.CompressionLevel]::Optimal,$true)`;
+if(fs.existsSync(file))fs.unlinkSync(file);
+const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{stdio:'inherit',windowsHide:true});
+if(result.error)throw result.error;if(result.status!==0)process.exit(result.status||1);
+fs.writeFileSync(file+'.sha256',crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')+'  '+path.basename(file)+'\n');console.log(file);

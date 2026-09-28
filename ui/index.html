@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Shoutout Desk</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.3.0</span></div>
+    <div class="window-buttons">
+      <button data-window="tray" title="Свернуть в трей" aria-label="Свернуть в трей"><i data-lucide="panel-bottom-close"></i></button>
+      <span class="separator"></span>
+      <button data-window="minimize" title="Свернуть" aria-label="Свернуть"><i data-lucide="minus"></i></button>
+      <button data-window="maximize" id="maximize" title="Развернуть" aria-label="Развернуть"><i data-lucide="square"></i></button>
+      <button data-window="close" class="close" title="Закрыть приложение" aria-label="Закрыть приложение"><i data-lucide="x"></i></button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="workspace-label">РАБОЧАЯ ОБЛАСТЬ</div>
+      <nav aria-label="Разделы">
+        <button class="nav active" data-view="people" title="Люди"><i data-lucide="users-round"></i><span>Люди</span><b id="nav-count">0</b></button>
+        <button class="nav" data-view="history" title="История"><i data-lucide="history"></i><span>История</span></button>
+        <button class="nav" data-view="settings" title="Настройки"><i data-lucide="sliders-horizontal"></i><span>Настройки</span></button>
+      </nav>
+      <div class="sidebar-bottom"><span class="status-dot" id="account-dot"></span><div><strong id="account-label">Twitch</strong><small id="account-state">Не подключён</small></div></div>
+    </aside>
+    <main>
+      <section id="people" class="view active">
+        <div class="heading"><div><div class="eyebrow">АВТОШОТАУТЫ</div><h1>Люди <span id="people-count">0</span></h1></div><label class="switch"><span id="enabled-label">Включены</span><input id="enabled" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <form id="add-form" class="add-row"><div class="input-icon"><i data-lucide="at-sign"></i><input id="new-login" aria-label="Добавить ник" placeholder="Ник или ссылка Twitch" autocomplete="off" spellcheck="false" maxlength="150"></div><button class="primary" type="submit"><i data-lucide="plus"></i>Добавить</button></form>
+        <div class="filter-row"><div class="input-icon search"><i data-lucide="search"></i><input id="search" aria-label="Поиск по нику" placeholder="Поиск по нику" autocomplete="off"></div><select id="sort" aria-label="Сортировка"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="name">По нику</option></select><button id="filter-toggle" class="icon-button" title="Фильтр по дате добавления" aria-label="Фильтр по дате добавления" aria-expanded="false"><i data-lucide="calendar-days"></i></button></div>
+        <div id="date-filters" class="date-filters" hidden><label>Добавлены с<input type="date" id="date-from"></label><label>по<input type="date" id="date-to"></label><button id="reset-filters" class="icon-button" title="Сбросить фильтры" aria-label="Сбросить фильтры"><i data-lucide="rotate-ccw"></i></button></div>
+        <div class="list-heading"><span id="list-caption">В списке</span><span id="cooldown-badge">Таймаут 24 ч</span></div>
+        <div id="people-list" class="people-list" aria-label="Список каналов"></div>
+        <div class="empty" id="people-empty"><i data-lucide="users-round"></i><h2>Список пуст</h2></div>
+        <div id="person-detail" class="person-detail" hidden></div>
+        <div class="queue-band"><div><i data-lucide="list-ordered"></i><strong>Очередь</strong><span id="queue-count">0</span></div><span id="queue-status">Нет ожидающих</span></div>
+        <div id="queue-list" class="queue-list"></div>
+      </section>
+      <section id="history" class="view">
+        <div class="heading"><div><div class="eyebrow">ЖУРНАЛ</div><h1>История</h1></div><span class="subtle" id="history-count">0 записей</span></div>
+        <div class="filter-row"><div class="input-icon search"><i data-lucide="search"></i><input id="history-search" aria-label="Поиск в истории" placeholder="Поиск по нику"></div><select id="history-status" aria-label="Результат"><option value="">Все результаты</option><option value="sent">Отправлены</option><option value="failed">Ошибки</option><option value="uncertain">Без подтверждения</option><option value="cancelled">Пропущены</option></select></div>
+        <div class="history-table"><table><thead><tr><th>Время</th><th>Канал</th><th>Результат</th><th class="history-action">Список</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+        <div class="empty" id="history-empty"><i data-lucide="history"></i><h2>Пока нет событий</h2></div>
+      </section>
+      <section id="settings" class="view">
+        <div class="heading"><div><div class="eyebrow">ПАРАМЕТРЫ</div><h1>Настройки</h1></div></div>
+        <div class="channel-notice"><i data-lucide="users"></i><div><strong>Один канал: один активный экземпляр</strong><p>Используйте приложение или OBS-плагин. Локальные таймауты между экземплярами не синхронизируются.</p></div></div>
+        <div class="setting-section"><h2><i data-lucide="radio-tower"></i>Подключение</h2>
+          <div class="segmented" aria-label="Способ подключения"><label><input type="radio" name="provider" value="bot" checked><span>Через Streamer.bot</span></label><label><input type="radio" name="provider" value="direct"><span>Самостоятельно</span></label></div>
+          <div class="connection-row"><div><strong id="provider-title">Streamer.bot</strong><span id="connection-status">Не настроен</span></div><button id="reconnect" class="icon-button" title="Переподключиться" aria-label="Переподключиться"><i data-lucide="refresh-cw"></i></button></div>
+          <div id="bot-settings"><div class="bot-path-row"><input id="bot-path" aria-label="Путь к Streamer.bot.exe" readonly placeholder="Streamer.bot.exe"><button id="choose-bot" class="icon-button" title="Выбрать Streamer.bot.exe" aria-label="Выбрать Streamer.bot.exe"><i data-lucide="folder-open"></i></button></div><button id="setup" class="primary"><i data-lucide="wand-sparkles"></i>Настроить Streamer.bot</button></div>
+          <div id="direct-settings" hidden><p class="connection-identity" id="direct-identity">Вход не выполнен</p><div class="action-row"><button id="open-wizard" class="primary"><i data-lucide="log-in"></i>Войти через Twitch</button><button id="logout" class="icon-button" title="Выйти из Twitch" aria-label="Выйти из Twitch" hidden><i data-lucide="log-out"></i></button></div></div>
+        </div>
+        <div class="setting-section"><h2><i data-lucide="timer"></i>Повторная отметка</h2><div class="range-heading"><label for="cooldown">Таймаут для каждого человека</label><output id="cooldown-output" for="cooldown">24 ч</output></div><input id="cooldown" type="range" min="1" max="168" step="1" value="24"><div class="range-labels"><span>1 час</span><span>7 дней</span></div>
+          <label class="check-row spaced"><input id="reset-long" type="checkbox"><span>Сбрасывать таймауты после долгого закрытия</span></label><p class="setting-help">Если приложение было закрыто больше 60 минут, персональные таймауты сбросятся при следующем запуске. История сохранится; нужны новые сообщения в чате.</p>
+          <button id="reset-cooldowns"><i data-lucide="rotate-ccw"></i>Сбросить все таймауты</button>
+        </div>
+        <div class="setting-section"><h2><i data-lucide="database"></i>Данные</h2><div class="action-row"><button id="import-data"><i data-lucide="upload"></i>Импорт</button><button id="export-data"><i data-lucide="download"></i>Экспорт</button><button id="open-folder"><i data-lucide="folder-open"></i>Папка данных</button></div></div>
+        <div class="setting-section"><h2><i data-lucide="panel-top"></i>Приложение</h2><label class="check-row"><input id="start-tray" type="checkbox"><span>Запускать сразу свёрнутой в трей</span></label><label class="field-label spaced" for="language">Язык</label><select id="language"><option value="uk-UA">Українська</option><option value="ru-RU">Русский</option><option value="en-US">English</option></select><div class="action-row spaced"><button id="check-update"><i data-lucide="refresh-cw"></i>Проверить обновления</button><span class="subtle" id="app-version"></span></div></div>
+      </section>
+    </main>
+  </div>
+  <footer><div><span class="status-dot" id="connection-dot"></span><span id="footer-status">Не подключено</span></div><span id="footer-right">Локальная база</span></footer>
+  <div id="toast" role="status" hidden></div>
+  <dialog id="restart-dialog"><h2>Streamer.bot сейчас открыт</h2><p>Закройте его через Exit в меню значка трея, затем нажмите «Продолжить». Сохранится резервная копия, установится связка, и Streamer.bot запустится снова.</p><p>Пока бот закрыт, его действия недоступны. OBS и трансляция не затрагиваются.</p><div class="dialog-buttons"><button id="cancel-setup">Отмена</button><button id="confirm-setup" class="primary">Продолжить</button></div></dialog>
+  <dialog id="direct-wizard" class="wizard">
+    <div class="wizard-heading"><div><span class="eyebrow" id="wizard-progress">ШАГ 1 ИЗ 4</span><h2 id="wizard-title">Приложение Twitch</h2></div><button id="wizard-close" class="icon-button" title="Закрыть настройку" aria-label="Закрыть настройку"><i data-lucide="x"></i></button></div>
+    <div class="wizard-body">
+      <section data-step="0">
+        <p>В этой сборке ещё нет общего Client ID. Его можно создать один раз в Twitch. Client Secret не нужен.</p>
+        <ol class="setup-steps"><li>Войдите в Twitch и включите двухфакторную защиту, если она ещё выключена. <button data-link="security" class="inline-link">Настройки безопасности <i data-lucide="external-link"></i></button></li><li>Откройте консоль разработчика и зарегистрируйте приложение. <button data-link="console" class="inline-link">Создать приложение <i data-lucide="external-link"></i></button></li><li>Имя: <strong>Shoutout Desk + ваш ник</strong>. Redirect URL: <code>http://localhost</code>. Категория: <strong>Chat Bot</strong>. Тип клиента: <strong>Public</strong>.</li><li>После создания откройте <strong>Manage</strong>, скопируйте <strong>Client ID</strong> и вставьте ниже.</li></ol>
+        <label class="field-label" for="client-id">Client ID</label><input id="client-id" class="wide-input" autocomplete="off" spellcheck="false" maxlength="64" placeholder="Публичный идентификатор приложения">
+      </section>
+      <section data-step="1" hidden>
+        <p>Разрешите чтение чата и отправку шотаутов в своём канале. Пароль вводится только на сайте Twitch.</p>
+        <button id="oauth-start" class="primary"><i data-lucide="log-in"></i>Войти через Twitch</button>
+        <div id="device-login" class="device-login" hidden><label>Код подтверждения</label><div><strong id="device-code"></strong><button id="copy-device" class="icon-button" title="Скопировать код" aria-label="Скопировать код"><i data-lucide="copy"></i></button></div><button data-link="authorize" class="inline-link">Открыть страницу Twitch <i data-lucide="external-link"></i></button></div>
+        <p id="oauth-status" class="wizard-status" role="status"></p>
+        <p id="oauth-user" class="success-line" hidden></p>
+      </section>
+      <section data-step="2" hidden>
+        <p id="own-channel"></p>
+        <p>Для этого канала должен работать только один экземпляр автоотметок: приложение или OBS-плагин.</p>
+      </section>
+      <section data-step="3" hidden><p id="check-channel"></p><div class="connection-check"><span class="status-dot" id="check-dot"></span><strong id="check-status">Подключаемся к Twitch</strong></div><p>Проверяем авторизацию и подписку на события чата. Тестовые шотауты не отправляются.</p><button id="wizard-reconnect"><i data-lucide="refresh-cw"></i>Повторить подключение</button></section>
+      <p id="wizard-error" class="wizard-error" role="alert" hidden></p>
+    </div>
+    <div class="dialog-buttons"><button id="wizard-back"><i data-lucide="arrow-left"></i>Назад</button><button id="wizard-next" class="primary">Продолжить<i data-lucide="arrow-right"></i></button></div>
+  </dialog>
+  <script src="../node_modules/lucide/dist/umd/lucide.js"></script><script src="i18n.js"></script><script src="renderer.js"></script>
+</body>
+</html>

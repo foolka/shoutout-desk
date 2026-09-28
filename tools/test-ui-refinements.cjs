@@ -1,0 +1,85 @@
+const {_electron:electron}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const {Store}=require('../core/store.cjs');
+const {DatabaseSync}=require('node:sqlite');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'test-output');
+fs.mkdirSync(out,{recursive:true});
+const profile=fs.mkdtempSync(path.join(out,'history-ui-'));
+const file=path.join(profile,'shoutouts.sqlite'),now=Date.now();
+const seed=new Store(file,()=>now),account='test-channel';
+seed.rememberAccount(account,'test_streamer');seed.setMeta('botAccount',{id:account,channel:'test_streamer'});
+seed.setPrefs({cooldownHours:14});
+for(let i=1;i<=31;i++)seed.add(`creator_${i}`,account);
+seed.add('history_viewer',account);
+const id=seed.enqueue(account,'history_viewer');seed.finish(id,'sent','Ранее отмечен',now-3600000);
+seed.db.prepare("INSERT INTO attempts(id,account,login,created_at,finished_at,status,detail) VALUES (?,?,?,?,?,'sent','Предыдущая отметка')")
+  .run('older',account,'history_viewer',now-20*3600000,now-20*3600000);
+seed.remove('history_viewer',account);
+const kept=seed.enqueue(account,'creator_1');seed.finish(kept,'sent','Уже в списке',now-3600000);
+const originalHistory=JSON.parse(JSON.stringify(seed.history(account)));
+const originalNext=seed.nextAt(account,'history_viewer');seed.close();
+const executablePath=process.argv[2]&&path.resolve(process.argv[2]);
+const env={...process.env,SHOUTOUT_DESK_TEST_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
+const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:executablePath?['--smoke-test']:[root,'--smoke-test'],env});
+let instance;
+(async()=>{
+  const errors=[];instance=await launch();let page=await instance.firstWindow();
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.waitForFunction(()=>document.querySelectorAll('.person-chip').length===31);
+  assert.equal((await page.evaluate(()=>window.desk.command('state'))).dataPath,profile);
+  assert.equal(await page.locator('.version').textContent(),require('../package.json').version);
+  const backups=fs.readdirSync(path.join(profile,'backups'));assert.equal(backups.length,1);
+  const backupDb=new DatabaseSync(path.join(profile,'backups',backups[0],'shoutouts.sqlite'),{readOnly:true});
+  try{assert.equal(backupDb.prepare('SELECT COUNT(*) AS n FROM channel_people WHERE active=1').get().n,31);assert.equal(backupDb.prepare('SELECT COUNT(*) AS n FROM attempts').get().n,originalHistory.length);}finally{backupDb.close();}
+  const heights=await page.locator('.person-chip').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().height));
+  assert.ok(heights.every(height=>height>=35&&height<=41),JSON.stringify(heights));
+  assert.equal(await page.locator('.select-wrap>select').count(),await page.locator('select').count());
+  const chevrons=await page.locator('.select-wrap').evaluateAll(nodes=>nodes.map(wrap=>({
+    right:getComputedStyle(wrap.querySelector('svg')).right,
+    appearance:getComputedStyle(wrap.querySelector('select')).appearance,
+    padding:getComputedStyle(wrap.querySelector('select')).paddingRight,
+  })));
+  assert.ok(chevrons.every(style=>style.right==='12px'&&style.appearance==='base-select'&&style.padding==='38px'));
+  await page.locator('#sort').click();
+  assert.equal(await page.locator('#sort').evaluate(el=>el.matches(':open')),true);
+  await page.screenshot({path:path.join(out,'sort-dropdown-desktop.png')});
+  await page.keyboard.press('Escape');
+  await page.screenshot({path:path.join(out,'compact-chips-desktop.png')});
+  await page.locator('#sort').selectOption('name');
+  await page.locator('[data-view=history]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.history-add').length===2);
+  assert.equal(await page.locator('tr[data-login="creator_1"] .history-add').count(),0);
+  await page.locator('#history-status').selectOption('sent');
+  await page.locator('#history-status').click();
+  assert.equal(await page.locator('#history-status').evaluate(el=>el.matches(':open')),true);
+  await page.screenshot({path:path.join(out,'history-dropdown-desktop.png')});
+  await page.keyboard.press('Escape');
+  await page.screenshot({path:path.join(out,'history-add-desktop.png')});
+  await instance.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(760,560));
+  await page.screenshot({path:path.join(out,'history-add-small.png')});
+  assert.equal(await page.evaluate(()=>document.body.scrollWidth>innerWidth||document.querySelector('main').scrollWidth>document.querySelector('main').clientWidth),false);
+  await page.getByRole('button',{name:'Добавить history_viewer в список',exact:true}).first().click();
+  await page.waitForFunction(()=>document.querySelectorAll('.history-add').length===0);
+  let state=await page.evaluate(()=>window.desk.command('state'));
+  assert.equal(state.people.length,32);assert.deepEqual(state.history,originalHistory);
+  assert.equal(state.people.find(p=>p.login==='history_viewer').nextAt,originalNext);
+  await page.locator('[data-view=people]').click();
+  await page.getByRole('button',{name:'Канал history_viewer',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Удалить history_viewer',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#people-count').textContent==='31');
+  await page.locator('[data-view=history]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.history-add').length===2);
+  await page.getByRole('button',{name:'Добавить history_viewer в список',exact:true}).first().click();
+  await page.waitForFunction(()=>document.querySelectorAll('.history-add').length===0);
+  await instance.close();instance=null;
+  instance=await launch();page=await instance.firstWindow();
+  await page.waitForFunction(()=>document.querySelector('#people-count').textContent==='32');
+  state=await page.evaluate(()=>window.desk.command('state'));
+  assert.deepEqual(state.history,originalHistory);
+  assert.equal(state.people.find(p=>p.login==='history_viewer').nextAt,originalNext);
+  assert.deepEqual(errors,[]);
+  assert.equal(fs.readdirSync(path.join(profile,'backups')).length,1);
+  await instance.close();instance=null;
+  console.log('UI refinements passed: 3 inset chevrons, compact chips, history add/remove/re-add, duplicate rows, persistent history/cooldown, desktop/small layouts. Isolated database; network disabled.');
+})().catch(async error=>{console.error(error);if(instance)await instance.close();process.exitCode=1;});

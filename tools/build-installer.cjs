@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {spawnSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..'),version=require('../package.json').version;
+const compiler=process.env.ISCC_EXE||path.join(root,'.deps/inno/ISCC.exe');
+const payload=path.join(root,'release/ShoutoutDesk'),output=path.join(root,'release');
+for(const name of ['ShoutoutDesk.exe','resources/app.asar','resources/app.ico'])if(!fs.existsSync(path.join(payload,name)))throw Error('Build the application first: '+name);
+const result=spawnSync(compiler,['/Qp','/DAppVersion='+version,'/DPackageDir='+payload,'/DOutputDir='+output,path.join(root,'tools/installer.iss')],{stdio:'inherit',windowsHide:true});
+if(result.error)throw result.error;if(result.status!==0)process.exit(result.status||1);
+const file=path.join(output,`shoutout-desk-${version}-windows-x64-setup.exe`);
+fs.writeFileSync(file+'.sha256',crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')+'  '+path.basename(file)+'\n');console.log(file);
