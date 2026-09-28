@@ -8,3 +8,7 @@
 6. Release EXE/ZIP/SHA256 in GitHub Releases; do not commit generated binaries, databases or credentials.
 
 Forks must register their own Twitch Public client. The bundled ID identifies the official Shoutout Desk application only. OBS has a separate client registration.
+
+## README Screenshots
+
+Run `node tools/screenshots.cjs` on Windows to capture the actual interface in English, Ukrainian and Russian. Each run uses a separate synthetic profile with networking disabled. The images go into `docs/screenshots/en-US`, `uk-UA` and `ru-RU`; each README must use its matching folder. UI regression captures stay in `test-output` and do not overwrite documentation images. Run `node --test tests/docs.test.cjs` to check the links and language folders.

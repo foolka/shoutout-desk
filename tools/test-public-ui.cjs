@@ -17,7 +17,7 @@ async function close(){if(!instance)return;const current=instance;instance=null;
   await page.waitForFunction(()=>document.querySelectorAll('.person-chip').length===8);
   let state=await page.evaluate(()=>window.desk.command('state'));assert.equal(state.prefs.enabled,true);assert.equal(state.dataPath,profile);
   assert.equal(state.people.find(p=>p.login==='riverstudio').lastAt,now-3600000);
-  const docs=path.join(root,'docs/screenshots');fs.mkdirSync(docs,{recursive:true});
+  const docs=path.join(out,'screenshots');fs.mkdirSync(docs,{recursive:true});
   await page.screenshot({path:path.join(docs,'people.png')});
   await page.locator('[data-view=history]').click();await page.screenshot({path:path.join(docs,'history.png')});
   await page.locator('.history-add').click();await page.waitForFunction(()=>document.querySelectorAll('.history-add').length===0);
