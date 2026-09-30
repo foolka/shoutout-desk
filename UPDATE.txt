@@ -1,4 +1,4 @@
-Shoutout Desk 0.3.0
+Shoutout Desk 0.4.0
 
 UPDATE / ОНОВЛЕННЯ / ОБНОВЛЕНИЕ
 
@@ -8,16 +8,24 @@ Normal profile: %APPDATA%\Shoutout Desk
 Portable.cmd profile: ShoutoutDesk-data beside the EXE.
 Keep these data folders. They are not included in the distribution.
 Use Export/Import to move people/history to another profile or PC.
+Oldest versions: close the source app, back up its data folder, then import
+shoutouts.sqlite in Settings after connecting the same Twitch account.
+People/history/cooldowns merge without replaying pending requests.
+Older releases need one manual upgrade to receive future update notifications.
 Windows-protected login may require signing in again on another PC.
 
 Перед обновлением полностью закройте приложение через Выход в трее.
 Установите новую версию поверх старой или замените ВСЮ папку программы
 из ZIP. Папки данных выше не удаляйте. Список, история и вход сохраняются.
 Portable.cmd использует отдельный профиль: не меняйте способ запуска.
+Из первых версий: сохраните папку данных, подключите тот же Twitch-аккаунт
+в новой версии и импортируйте shoutouts.sqlite в Настройках.
 
 Перед оновленням закрийте програму через Вихід у треї. Встановіть нову
 версію або замініть усі програмні файли з ZIP. Збережіть папки даних.
 Portable.cmd використовує окремий профіль: не змінюйте спосіб запуску.
+З перших версій: збережіть папку даних, підключіть той самий Twitch-акаунт
+у новій версії та імпортуйте shoutouts.sqlite в Налаштуваннях.
 
 Detailed settings and update instructions: README.md / README.ru.md / README.uk.md
 https://github.com/foolka/shoutout-desk/releases/latest

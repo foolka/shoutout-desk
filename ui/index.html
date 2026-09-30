@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="titlebar">
-    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.3.0</span></div>
+    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.4.0</span></div>
     <div class="window-buttons">
       <button data-window="tray" title="Свернуть в трей" aria-label="Свернуть в трей"><i data-lucide="panel-bottom-close"></i></button>
       <span class="separator"></span>
@@ -29,6 +29,7 @@
       <div class="sidebar-bottom"><span class="status-dot" id="account-dot"></span><div><strong id="account-label">Twitch</strong><small id="account-state">Не подключён</small></div></div>
     </aside>
     <main>
+      <button id="update-banner" class="update-banner" hidden><i data-lucide="download"></i><span>Доступно обновление</span><b id="update-version"></b></button>
       <section id="people" class="view active">
         <div class="heading"><div><div class="eyebrow">АВТОШОТАУТЫ</div><h1>Люди <span id="people-count">0</span></h1></div><label class="switch"><span id="enabled-label">Включены</span><input id="enabled" type="checkbox" checked><span class="switch-track"></span></label></div>
         <form id="add-form" class="add-row"><div class="input-icon"><i data-lucide="at-sign"></i><input id="new-login" aria-label="Добавить ник" placeholder="Ник или ссылка Twitch" autocomplete="off" spellcheck="false" maxlength="150"></div><button class="primary" type="submit"><i data-lucide="plus"></i>Добавить</button></form>
@@ -60,8 +61,9 @@
           <label class="check-row spaced"><input id="reset-long" type="checkbox"><span>Сбрасывать таймауты после долгого закрытия</span></label><p class="setting-help">Если приложение было закрыто больше 60 минут, персональные таймауты сбросятся при следующем запуске. История сохранится; нужны новые сообщения в чате.</p>
           <button id="reset-cooldowns"><i data-lucide="rotate-ccw"></i>Сбросить все таймауты</button>
         </div>
+        <div class="setting-section"><h2><i data-lucide="radio-tower"></i>Рейды</h2><label class="check-row"><input id="raid-shoutouts" type="checkbox"><span>Автоотметки за рейды</span></label><p class="setting-help">Через 20 секунд после рейда, даже если стримера нет в списке. Если другой бот уже сделал Twitch-шотаут, повтор отменяется. Таймауты и лимиты Twitch остаются.</p></div>
         <div class="setting-section"><h2><i data-lucide="database"></i>Данные</h2><div class="action-row"><button id="import-data"><i data-lucide="upload"></i>Импорт</button><button id="export-data"><i data-lucide="download"></i>Экспорт</button><button id="open-folder"><i data-lucide="folder-open"></i>Папка данных</button></div></div>
-        <div class="setting-section"><h2><i data-lucide="panel-top"></i>Приложение</h2><label class="check-row"><input id="start-tray" type="checkbox"><span>Запускать сразу свёрнутой в трей</span></label><label class="field-label spaced" for="language">Язык</label><select id="language"><option value="uk-UA">Українська</option><option value="ru-RU">Русский</option><option value="en-US">English</option></select><div class="action-row spaced"><button id="check-update"><i data-lucide="refresh-cw"></i>Проверить обновления</button><span class="subtle" id="app-version"></span></div></div>
+        <div class="setting-section"><h2><i data-lucide="panel-top"></i>Приложение</h2><label class="check-row"><input id="start-tray" type="checkbox"><span>Запускать сразу свёрнутой в трей</span></label><label class="field-label spaced" for="language">Язык</label><select id="language"><option value="uk-UA">Українська</option><option value="ru-RU">Русский</option><option value="en-US">English</option></select><label class="check-row spaced"><input id="auto-updates" type="checkbox"><span>Уведомлять о новых версиях</span></label><div class="action-row spaced"><button id="check-update"><i data-lucide="refresh-cw"></i>Проверить обновления</button><span class="subtle" id="app-version"></span></div></div>
       </section>
     </main>
   </div>

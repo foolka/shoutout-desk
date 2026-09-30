@@ -1,10 +1,10 @@
-const {app,BrowserWindow,ipcMain,Tray,Menu,nativeImage,dialog,shell,safeStorage,clipboard}=require('electron');
+const {app,BrowserWindow,ipcMain,Tray,Menu,nativeImage,dialog,shell,safeStorage,clipboard,Notification}=require('electron');
 const fs=require('node:fs'),path=require('node:path');
 const {spawn}=require('node:child_process');
 const {Store}=require('./core/store.cjs');
 const {prepareProfile,backupProfile}=require('./core/profile.cjs');
 const {exportBundle,importBundle,readDesktop}=require('./core/transfer.cjs');
-const {checkUpdate}=require('./core/update.cjs');
+const {UpdateMonitor}=require('./core/update-monitor.cjs');
 const {ObsSession:AppSession,HEARTBEAT_MS}=require('./core/session.cjs');
 const {Bridge}=require('./core/bridge.cjs');
 const {Engine}=require('./core/engine.cjs');
@@ -20,7 +20,7 @@ if(process.env.SHOUTOUT_DESK_TEST_DATA)app.setPath('userData',path.resolve(proce
 app.setAppUserModelId('com.fermionaplay.shoutoutdesk');
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance)app.quit();
-let win,tray,store,session,bridge,engine,auth,connection=null,status='Не подключено',settingUp=false,refreshing=false,shuttingDown=false;
+let win,tray,store,session,bridge,engine,auth,updates,connection=null,status='Не подключено',settingUp=false,refreshing=false,shuttingDown=false;
 const icon=path.join(__dirname,'assets','icon.ico');
 function loadPrivate(name){try{const saved=JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),name),'utf8'));return JSON.parse(safeStorage.decryptString(Buffer.from(saved.encrypted,'base64')));}catch{return null;}}
 function savePrivate(name,value){
@@ -38,7 +38,7 @@ function target(){
 function snapshot(){
   const chosen=target(),prefs=store.prefs();
   return {version:app.getVersion(),prefs,people:store.people(chosen.id),history:store.history(chosen.id),account:chosen.channel,
-    connected:!!engine?.ready,live:!!engine?.live,status,configured:!!connection,botPath:connection?.exe||'',dataPath:app.getPath('userData'),
+    connected:!!engine?.ready,live:!!engine?.live,status,update:updates?.view(),configured:!!connection,botPath:connection?.exe||'',dataPath:app.getPath('userData'),
     nextGlobal:chosen.id?store.globalNext(chosen.id):0,maximized:win?.isMaximized()||false,
     direct:{...auth.view(),clientId:bundledClient||store.meta('twitchClientId',''),bundled:!!bundledClient}};
 }
@@ -66,6 +66,7 @@ function connect(){
   transport.on('event',(type,data)=>{
     if(type==='ChatMessage')current.message(data);
     if(type==='ShoutoutCreated')current.shoutout(data);
+    if(type==='Raid')current.raid(data);
     const eventAccount=String(data.broadcaster?.id||data.channelId||'');
     if(data.isTest||data.isFromSharedChatGuest||(eventAccount&&eventAccount!==current.account))return;
     if(type==='StreamOffline'){current.live=false;store.cancelQueue('Канал не в эфире');sendState();}
@@ -87,6 +88,15 @@ app.whenReady().then(async()=>{
   await prepareProfile(app.getPath('userData'),app.getVersion());
   store=new Store(path.join(app.getPath('userData'),'shoutouts.sqlite'));connection=loadPrivate('connection.json');
   store.setPrefs({enabled:true});session=new AppSession(store);
+  updates=new UpdateMonitor(store,app.getVersion(),release=>{
+    sendState();
+    if(!release||!store.prefs().autoUpdates||store.meta('notifiedRelease','')===release.version||!Notification.isSupported())return;
+    store.setMeta('notifiedRelease',release.version);
+    const texts={'ru-RU':['Доступно обновление','Новая версия'],'uk-UA':['Доступне оновлення','Нова версія'],'en-US':['Update available','New version']};
+    const text=texts[store.prefs().language]||texts['en-US'];
+    const notification=new Notification({title:'Shoutout Desk: '+text[0],body:text[1]+' '+release.version,silent:true});
+    notification.on('click',showWindow);notification.show();
+  });
   if(!store.meta('botAccount'))store.setMeta('botAccount',store.lastAccount());
   auth=new TwitchAuth({saved:loadPrivate('twitch-auth.json'),save:value=>savePrivate('twitch-auth.json',value),pending:loadPrivate('twitch-login.json'),savePending:value=>savePrivate('twitch-login.json',value)});
   auth.on('authorized',()=>{if(store.prefs().provider==='direct'){store.setPrefs({enabled:true});connect();}});
@@ -143,10 +153,11 @@ app.whenReady().then(async()=>{
       }
       case 'update':{
         if(smoke)throw Error('Сеть отключена в тестовом режиме.');
-        const result=await checkUpdate(app.getVersion());
+        const result=await updates.refresh(true);
         if(result.available){const answer=await dialog.showMessageBox(win,{type:'info',title:'Обновление',message:'Доступна версия '+result.version,detail:'Закройте приложение перед установкой. База и вход сохранятся.',buttons:['Позже','Открыть выпуск'],defaultId:0,cancelId:0,noLink:true});if(answer.response===1)await shell.openExternal(result.url);}
         return result;
       }
+      case 'open-update':if(!smoke&&updates.view())await shell.openExternal(updates.view().url);return;
       case 'reconnect':canChange();connect();return;
       case 'setup-link':{
         const links={console:'https://dev.twitch.tv/console/apps/create',security:'https://www.twitch.tv/settings/security',connections:'https://www.twitch.tv/settings/connections',authorize:auth.pending?.url};
@@ -188,10 +199,10 @@ app.whenReady().then(async()=>{
     }
     sendState();return snapshot();
   });
-  connect();if(!smoke)auth.resume();setInterval(()=>session.touch(),HEARTBEAT_MS).unref();setInterval(()=>{if(!smoke)void engine?.tick();},1000).unref();setInterval(()=>{if(!smoke)void refreshStatus();},30000).unref();
+  connect();if(!smoke){auth.resume();updates.start();}setInterval(()=>session.touch(),HEARTBEAT_MS).unref();setInterval(()=>{if(!smoke)void engine?.tick();},1000).unref();setInterval(()=>{if(!smoke)void refreshStatus();},30000).unref();
 }).catch(error=>{
   dialog.showErrorBox('Shoutout Desk: запуск отменён','Не удалось безопасно подготовить данные. Не удаляйте папку данных; проверьте свободное место и права доступа.\n\n'+error.message);
   app.exit(1);
 });
 app.on('window-all-closed',()=>app.quit());
-app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});
+app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;updates?.stop();auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});

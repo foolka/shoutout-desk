@@ -51,6 +51,7 @@ function renderHistory(){
     const tr=node('tr');tr.dataset.login=row.login;
     tr.append(node('td',stamp(row.finished_at||row.created_at)),node('td',row.login));
     const result=node('td',labels[row.status]||row.status,'result-'+row.status);
+    if(row.trigger==='raid')result.append(node('small','Рейд'));
     if(row.detail)result.append(node('small',row.detail));
     const action=node('td',null,'history-action');
     if(!active.has(row.login.toLowerCase())){
@@ -74,6 +75,10 @@ function render(next){
   state=next;$('enabled').checked=state.prefs.enabled;$('enabled-label').textContent=state.prefs.enabled?'Включены':'На паузе';
   $('start-tray').checked=state.prefs.startInTray;
   $('reset-long').checked=state.prefs.resetAfterLongClose;
+  $('raid-shoutouts').checked=!!state.prefs.raidShoutouts;
+  $('auto-updates').checked=state.prefs.autoUpdates!==false;
+  $('update-banner').hidden=!state.update?.available;
+  $('update-version').textContent=state.update?.version||'';
   $('language').value=state.prefs.language;window.deskI18n.setLanguage(state.prefs.language);
   $('app-version').textContent='Shoutout Desk '+state.version;document.querySelector('.version').textContent=state.version;
   if(document.activeElement!==$('cooldown'))$('cooldown').value=state.prefs.cooldownHours;
@@ -137,6 +142,9 @@ $('history-search').oninput=renderHistory;$('history-status').onchange=renderHis
 $('enabled').onchange=()=>void cmd('prefs',{enabled:$('enabled').checked}).catch(()=>{});
 $('start-tray').onchange=()=>void cmd('prefs',{startInTray:$('start-tray').checked}).catch(()=>{});
 $('reset-long').onchange=()=>void cmd('prefs',{resetAfterLongClose:$('reset-long').checked}).catch(()=>{});
+$('raid-shoutouts').onchange=()=>void cmd('prefs',{raidShoutouts:$('raid-shoutouts').checked}).catch(()=>{});
+$('auto-updates').onchange=()=>void cmd('prefs',{autoUpdates:$('auto-updates').checked}).catch(()=>{});
+$('update-banner').onclick=()=>void cmd('open-update').catch(()=>{});
 $('language').onchange=()=>void cmd('prefs',{language:$('language').value}).catch(()=>{});
 $('reset-cooldowns').onclick=()=>void cmd('reset-cooldowns').catch(()=>{});
 $('export-data').onclick=()=>void cmd('export').then(r=>{if(!r.cancelled)toast('Экспорт сохранён. Токенов в файле нет.');}).catch(()=>{});
