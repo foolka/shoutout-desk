@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 - 2026-09-30
+
+- Recover automatically from temporary network, rate-limit and Twitch server errors without requesting login.
+- Persist rotated single-use tokens before validation and serialize concurrent refreshes.
+- Distinguish saved identity from verified authorization; show sign-in actions only when needed.
+- Add a persistent sign-in banner and a Windows notification for confirmed invalid authorization.
+- Keep people, history, cooldowns and the existing database schema unchanged.
+
 ## 0.4.0 - 2026-09-30
 
 - Optional incoming-raid shoutouts after at least 20 seconds, including raiders outside the saved list.

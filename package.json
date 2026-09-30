@@ -1,7 +1,7 @@
 {
   "name": "shoutout-desk",
   "productName": "Shoutout Desk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Local Twitch shoutout manager with direct and Streamer.bot connections",
   "private": true,
   "license": "GPL-2.0-or-later",

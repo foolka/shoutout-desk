@@ -1,5 +1,7 @@
 # Shoutout Desk
 
+**Sign-in fix in 0.4.1:** temporary Twitch and network failures recover automatically. Only invalid authorization displays the sign-in banner and a Windows notification (when allowed). People, history and cooldowns are preserved.
+
 [English](README.md) | [Українська](README.uk.md) | [Русский](README.ru.md)
 
 A small Windows app that sends a Twitch shoutout when a person from your list writes in chat after their cooldown expires.

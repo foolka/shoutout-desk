@@ -37,6 +37,16 @@ async function close(){if(!instance)return;const current=instance;instance=null;
   }
   await page.locator('#open-wizard').click();await page.locator('[data-step="1"]').waitFor();assert.equal(await page.locator('#client-id').isVisible(),false);
   await page.locator('#wizard-close').click();
+  const baseline=await page.evaluate(()=>window.desk.command('state'));
+  const inject=async direct=>instance.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),{...baseline,connected:false,direct:{...baseline.direct,user:{id:account,login:'demo_channel'},...direct}});
+  await inject({status:'retrying',reauthRequired:false});
+  await page.waitForFunction(()=>document.querySelector('#direct-identity').textContent.includes('вход сохранён'));
+  assert.equal(await page.locator('#auth-banner').isVisible(),false);
+  await inject({status:'reauth_required',reauthRequired:true});await page.locator('#auth-banner').click();
+  await page.locator('[data-step="1"]').waitFor();assert.equal(await page.locator('#oauth-user').isVisible(),false);assert.equal(await page.locator('#wizard-next').isEnabled(),false);
+  await page.screenshot({path:path.join(out,'reauth-required.png')});
+  await page.locator('#wizard-close').click();
+  await instance.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),baseline);
   const mock=async values=>instance.evaluate(({dialog},v)=>{
     dialog.showMessageBox=async()=>({response:v.answer});
     dialog.showSaveDialog=async()=>({canceled:false,filePath:v.file});

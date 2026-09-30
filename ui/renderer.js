@@ -73,6 +73,8 @@ function renderHistory(){
 }
 function render(next){
   state=next;$('enabled').checked=state.prefs.enabled;$('enabled-label').textContent=state.prefs.enabled?'Включены':'На паузе';
+  const needsLogin=state.prefs.provider==='direct'&&state.direct.reauthRequired;
+  $('auth-banner').hidden=!needsLogin;$('enabled').disabled=!!needsLogin;
   $('start-tray').checked=state.prefs.startInTray;
   $('reset-long').checked=state.prefs.resetAfterLongClose;
   $('raid-shoutouts').checked=!!state.prefs.raidShoutouts;
@@ -90,7 +92,7 @@ function render(next){
   const direct=state.prefs.provider==='direct';
   document.querySelectorAll('[name="provider"]').forEach(el=>el.checked=el.value===state.prefs.provider);
   $('provider-title').textContent=direct?'Twitch напрямую':'Streamer.bot';$('bot-settings').hidden=direct;$('direct-settings').hidden=!direct;
-  $('direct-identity').textContent=state.direct.user?`Аккаунт: ${state.direct.user.login}${state.account?' · Канал: '+state.account:''}`:'Вход не выполнен';
+  $('direct-identity').textContent=needsLogin?'Нужно повторно войти в Twitch':state.direct.status==='restoring'?'Проверяем сохранённый вход':state.direct.status==='retrying'?'Нет соединения с Twitch. Повторяем автоматически; вход сохранён.':state.direct.user?`Аккаунт: ${state.direct.user.login}${state.account?' · Канал: '+state.account:''}`:'Вход не выполнен';
   $('logout').hidden=!state.direct.user;
   $('maximize').title=state.maximized?'Восстановить':'Развернуть';$('maximize').setAttribute('aria-label',$('maximize').title);
   renderPeople();renderHistory();renderWizard();
@@ -103,11 +105,11 @@ function renderWizard(){
   document.querySelectorAll('[data-step]').forEach(el=>el.hidden=Number(el.dataset.step)!==wizardStep);
   $('wizard-back').hidden=wizardStep<=(state.direct.bundled?1:0);$('wizard-back').disabled=wizardBusy;
   $('wizard-next').textContent=wizardStep===3?'Готово':wizardStep===2?'Подключиться':'Продолжить';
-  $('wizard-next').disabled=wizardBusy||(wizardStep===1&&(!state.direct.user||!!state.direct.pending))||(wizardStep===3&&!state.connected);
+  $('wizard-next').disabled=wizardBusy||(wizardStep===1&&(!state.direct.user||state.direct.reauthRequired||state.direct.status!=='ready'||!!state.direct.pending))||(wizardStep===3&&!state.connected);
   $('oauth-start').disabled=wizardBusy||!!state.direct.pending;
   $('oauth-start').hidden=!!state.direct.pending;
   $('device-login').hidden=!state.direct.pending;$('device-code').textContent=state.direct.pending?.code||'';
-  $('oauth-status').textContent=state.direct.message;$('oauth-user').hidden=!state.direct.user;
+  $('oauth-status').textContent=state.direct.message;$('oauth-user').hidden=!state.direct.user||state.direct.status!=='ready';
   $('oauth-user').textContent=state.direct.user?`Выполнен вход: ${state.direct.user.login}`:'';
   $('own-channel').textContent=`Свой канал: ${state.direct.user?.login||''}`;
   $('check-channel').textContent=`Канал: ${state.account||'не выбран'}`;$('check-status').textContent=state.status;
@@ -120,7 +122,7 @@ async function wizardAction(action){
   finally{wizardBusy=false;renderWizard();}
 }
 function openWizard(){
-  $('client-id').value=state.direct.clientId;wizardStep=state.direct.user?2:state.direct.clientId?1:0;
+  $('client-id').value=state.direct.clientId;wizardStep=state.direct.user&&state.direct.status==='ready'?2:state.direct.clientId?1:0;
   $('wizard-error').hidden=true;$('direct-wizard').showModal();renderWizard();
 }
 function closeWizard(){if(wizardBusy)return;$('direct-wizard').close();void cmd('direct-cancel').catch(()=>{});}
@@ -133,6 +135,7 @@ async function setup(){
   finally{setupBusy=false;$('setup').disabled=false;}
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view(b.dataset.view));
+$('auth-banner').onclick=openWizard;
 document.querySelectorAll('[data-window]').forEach(b=>b.onclick=()=>void cmd(b.dataset.window).catch(()=>{}));
 $('add-form').onsubmit=async e=>{e.preventDefault();try{await cmd('add',$('new-login').value);$('new-login').value='';$('new-login').focus();}catch{}};
 for(const id of ['search','sort','date-from','date-to'])$(id).addEventListener('input',renderPeople);

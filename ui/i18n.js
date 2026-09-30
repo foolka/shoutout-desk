@@ -1,5 +1,8 @@
 (() => {
   const rows = [
+    ['Нужно повторно войти в Twitch','Twitch sign-in required','Потрібно знову ввійти у Twitch'],
+    ['Проверяем сохранённый вход','Checking saved sign-in','Перевіряємо збережений вхід'],
+    ['Нет соединения с Twitch. Повторяем автоматически; вход сохранён.','Twitch is unreachable. Retrying automatically; sign-in is saved.','Немає зв’язку з Twitch. Повторюємо автоматично; вхід збережено.'],
     ['Рейды','Raids','Рейди'],['Рейд','Raid','Рейд'],['Автоотметки за рейды','Automatic raid shoutouts','Автовідмітки за рейди'],
     ['Через 20 секунд после рейда, даже если стримера нет в списке. Если другой бот уже сделал Twitch-шотаут, повтор отменяется. Таймауты и лимиты Twitch остаются.','Waits 20 seconds after a raid, including streamers outside your list. An observed Twitch shoutout from another bot cancels the duplicate. Cooldowns and Twitch limits still apply.','Через 20 секунд після рейду, навіть якщо стримера немає у списку. Якщо інший бот уже зробив Twitch-відмітку, повтор скасовується. Таймаути й ліміти Twitch залишаються.'],
     ['Уведомлять о новых версиях','Notify about new versions','Сповіщати про нові версії'],['Доступно обновление','Update available','Доступне оновлення'],

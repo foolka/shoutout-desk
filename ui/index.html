@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="titlebar">
-    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.4.0</span></div>
+    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.4.1</span></div>
     <div class="window-buttons">
       <button data-window="tray" title="Свернуть в трей" aria-label="Свернуть в трей"><i data-lucide="panel-bottom-close"></i></button>
       <span class="separator"></span>
@@ -29,6 +29,7 @@
       <div class="sidebar-bottom"><span class="status-dot" id="account-dot"></span><div><strong id="account-label">Twitch</strong><small id="account-state">Не подключён</small></div></div>
     </aside>
     <main>
+      <button id="auth-banner" class="update-banner" hidden><i data-lucide="log-in"></i><span>Нужно повторно войти в Twitch</span></button>
       <button id="update-banner" class="update-banner" hidden><i data-lucide="download"></i><span>Доступно обновление</span><b id="update-version"></b></button>
       <section id="people" class="view active">
         <div class="heading"><div><div class="eyebrow">АВТОШОТАУТЫ</div><h1>Люди <span id="people-count">0</span></h1></div><label class="switch"><span id="enabled-label">Включены</span><input id="enabled" type="checkbox" checked><span class="switch-track"></span></label></div>

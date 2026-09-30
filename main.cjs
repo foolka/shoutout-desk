@@ -100,7 +100,21 @@ app.whenReady().then(async()=>{
   if(!store.meta('botAccount'))store.setMeta('botAccount',store.lastAccount());
   auth=new TwitchAuth({saved:loadPrivate('twitch-auth.json'),save:value=>savePrivate('twitch-auth.json',value),pending:loadPrivate('twitch-login.json'),savePending:value=>savePrivate('twitch-login.json',value)});
   auth.on('authorized',()=>{if(store.prefs().provider==='direct'){store.setPrefs({enabled:true});connect();}});
-  auth.on('change',sendState);auth.on('expired',()=>{if(store.prefs().provider==='direct'){stopConnection();status=auth.message;}sendState();});
+  auth.on('change',sendState);auth.on('expired',()=>{
+    if(store.prefs().provider==='direct'){
+      stopConnection();status=auth.message;
+      if(!smoke&&Notification.isSupported()){
+        const text={
+          'ru-RU':['Нужен вход в Twitch','Twitch отклонил сохранённый вход. Автоотметки остановлены; список и история сохранены.'],
+          'uk-UA':['Потрібен вхід у Twitch','Twitch відхилив збережений вхід. Автовідмітки зупинені; список та історія збережені.'],
+          'en-US':['Twitch sign-in required','Twitch rejected the saved sign-in. Auto-shoutouts are stopped; your people and history are preserved.']
+        }[store.prefs().language]||['Twitch sign-in required','Open Shoutout Desk to sign in again. Your data is preserved.'];
+        const notification=new Notification({title:'Shoutout Desk: '+text[0],body:text[1],silent:true});
+        notification.on('click',showWindow);notification.show();
+      }
+    }
+    sendState();
+  });
   win=new BrowserWindow({width:1040,height:740,minWidth:760,minHeight:560,frame:false,show:false,backgroundColor:'#181a1d',icon,
     webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   win.setMenu(null);win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());
