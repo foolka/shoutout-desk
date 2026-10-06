@@ -21,6 +21,7 @@ Screenshots use fictional accounts. No personal profiles are included.
 - [Setup](#setup)
 - [Settings and controls](#settings)
 - [Updates and portable mode](#updates)
+- [Send diagnostic logs](#diagnostics)
 - [Data and privacy](#privacy)
 - [Screenshots](#screenshots)
 - [Build from source](#build)
@@ -101,6 +102,15 @@ Use **Check for updates**, exit the app and run the new installer over the old v
 **ZIP / no installation:** extract the full archive and run `ShoutoutDesk.exe`. It uses the same Windows profile as the installed app, so replacing program files preserves your data. Never run two copies for one channel.
 
 **Fully portable data:** run `Portable.cmd` instead. Its separate profile is `ShoutoutDesk-data` next to the EXE. Use that launcher consistently. On update, close the app and replace only program files; keep `ShoutoutDesk-data`. The ZIP contains no database. Use Export/Import to move a list between profiles. Encrypted sign-in is tied to Windows user/machine; sign in again on a different computer.
+
+<a id="diagnostics"></a>
+## Send diagnostic logs
+
+Open **Settings > Diagnostics**, choose **Last hour, 24 hours or 7 days**, then click **Send logs** and confirm. Send the report reference to the maintainer so they can find it.
+
+The report goes to `https://fermionaplay.win` and is visible only to the site owner, for **30 days**. It contains your configured Twitch channel name, app version, connection state, counts and queue outcomes. Event usernames are replaced with per-report identifiers. No chat text, OAuth tokens, passwords, raw exceptions or people database are uploaded. No automatic log uploads occur. Standard server access logs may contain your IP address.
+
+Detailed local logs start with this update, are size-limited and rotate over about 7 days; earlier events are included only when present in saved history. Reports are capped at 1,800 events / 512 KiB and indicate incomplete data. Failed sending leaves your data unchanged; retry later. In OBS, diagnostics use a separate helper and can still work when the main worker is unavailable, provided the bundled runtime is intact.
 
 <a id="privacy"></a>
 ## Data and privacy

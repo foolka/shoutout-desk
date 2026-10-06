@@ -34,7 +34,12 @@ async function close(){if(!instance)return;const current=instance;instance=null;
   await page.locator('#check-update').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(docs,'settings-data.png')});
   for(const [language,caption] of [['en-US','Settings'],['uk-UA','Налаштування'],['ru-RU','Настройки']]){
     await page.locator('#language').selectOption(language);await page.waitForFunction(text=>document.querySelector('#settings h1').textContent===text,caption);
+    await page.locator('#send-logs').scrollIntoViewIfNeeded();
+    assert.equal(await page.locator('#diagnostic-period option').count(),3);
+    await page.screenshot({path:path.join(docs,'diagnostics-'+language+'.png')});
   }
+  await page.locator('#send-logs').click();await page.waitForFunction(()=>!document.querySelector('#send-logs').disabled);
+  assert.equal(await page.locator('#diagnostic-result').isVisible(),false);
   await page.locator('#open-wizard').click();await page.locator('[data-step="1"]').waitFor();assert.equal(await page.locator('#client-id').isVisible(),false);
   await page.locator('#wizard-close').click();
   const baseline=await page.evaluate(()=>window.desk.command('state'));

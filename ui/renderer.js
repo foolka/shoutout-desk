@@ -1,6 +1,19 @@
 const $=id=>document.getElementById(id);
 let state=null,selected='',toastTimer,setupBusy=false,wizardStep=0,wizardBusy=false;
 const historyAdds=new Set();
+let diagnosticBusy=false;
+$('send-logs').onclick=async()=>{
+  if(diagnosticBusy||!state)return;
+  diagnosticBusy=true;$('send-logs').disabled=true;$('diagnostic-period').disabled=true;
+  $('diagnostic-result').hidden=false;$('diagnostic-message').textContent=state.diagnosticText.busy;$('diagnostic-reference').textContent='';$('copy-report').hidden=true;
+  try{
+    const result=await window.desk.command('send-logs',Number($('diagnostic-period').value));
+    if(result.cancelled){$('diagnostic-result').hidden=true;return;}
+    $('diagnostic-message').textContent=state.diagnosticText.sent;$('diagnostic-reference').textContent=result.id;$('copy-report').hidden=false;
+  }catch(error){$('diagnostic-message').textContent=error.message.replace(/^Error invoking remote method '[^']+': Error: /,'');}
+  finally{diagnosticBusy=false;$('send-logs').disabled=false;$('diagnostic-period').disabled=false;}
+};
+$('copy-report').onclick=()=>void cmd('copy-report').then(()=>toast(state.diagnosticText.copied)).catch(()=>{});
 const labels={sent:'Отправлен',failed:'Ошибка',uncertain:'Нет подтверждения',cancelled:'Пропущен',queued:'В очереди',sending:'Отправляется'};
 const icons=()=>lucide.createIcons();
 const stamp=value=>value==null?'Ещё не отмечали':new Date(value).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -72,6 +85,8 @@ function renderHistory(){
   icons();
 }
 function render(next){
+  for(const element of document.querySelectorAll('[data-diagnostic]'))element.textContent=next.diagnosticText[element.dataset.diagnostic];
+  $('copy-report').title=next.diagnosticText.copy;$('copy-report').setAttribute('aria-label',next.diagnosticText.copy);
   state=next;$('enabled').checked=state.prefs.enabled;$('enabled-label').textContent=state.prefs.enabled?'Включены':'На паузе';
   const needsLogin=state.prefs.provider==='direct'&&state.direct.reauthRequired;
   $('auth-banner').hidden=!needsLogin;$('enabled').disabled=!!needsLogin;

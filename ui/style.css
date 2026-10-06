@@ -19,3 +19,6 @@ select option::checkmark{color:var(--mint)}
 .nav span{min-width:0;overflow-wrap:anywhere;text-align:left}.nav{height:auto;min-height:40px}
  .update-banner{width:100%;margin-bottom:16px;border-color:#79bba4;color:#b4e6d4;justify-content:flex-start;gap:8px;flex-wrap:wrap;}
  .update-banner[hidden]{display:none;}
+ .diagnostic-result{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:13px;overflow-wrap:anywhere;}
+ .diagnostic-result[hidden]{display:none;}
+ #diagnostic-reference{overflow-wrap:anywhere;user-select:text;}

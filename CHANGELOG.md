@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 - 2026-10-06
+
+- Optional diagnostic reports: last hour, 24 hours or 7 days, sent only after confirmation.
+- Private owner-only reports on fermionaplay.win, with 30-day retention and a copyable reference.
+- Allowlisted connection/queue events, per-report pseudonyms, no OAuth tokens, chat text or people database.
+- Bounded local diagnostic logs. Existing profiles, history, cooldowns and authorization are preserved.
+
 ## 0.4.1 - 2026-09-30
 
 - Recover automatically from temporary network, rate-limit and Twitch server errors without requesting login.

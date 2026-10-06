@@ -5,6 +5,8 @@ const {Store}=require('./core/store.cjs');
 const {prepareProfile,backupProfile}=require('./core/profile.cjs');
 const {exportBundle,importBundle,readDesktop}=require('./core/transfer.cjs');
 const {UpdateMonitor}=require('./core/update-monitor.cjs');
+const {Diagnostics,buildReport,uploadReport}=require('./core/diagnostics.cjs');
+const diagnosticCopy=require('./core/diagnostic-copy.cjs');
 const {ObsSession:AppSession,HEARTBEAT_MS}=require('./core/session.cjs');
 const {Bridge}=require('./core/bridge.cjs');
 const {Engine}=require('./core/engine.cjs');
@@ -21,6 +23,7 @@ app.setAppUserModelId('com.fermionaplay.shoutoutdesk');
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance)app.quit();
 let win,tray,store,session,bridge,engine,auth,updates,connection=null,status='Не подключено',settingUp=false,refreshing=false,shuttingDown=false;
+let diagnostics,diagnosticBusy=false,diagnosticPending=null,lastReportId='';
 const icon=path.join(__dirname,'assets','icon.ico');
 function loadPrivate(name){try{const saved=JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),name),'utf8'));return JSON.parse(safeStorage.decryptString(Buffer.from(saved.encrypted,'base64')));}catch{return null;}}
 function savePrivate(name,value){
@@ -37,10 +40,11 @@ function target(){
 }
 function snapshot(){
   const chosen=target(),prefs=store.prefs();
-  return {version:app.getVersion(),prefs,people:store.people(chosen.id),history:store.history(chosen.id),account:chosen.channel,
+  const value={version:app.getVersion(),diagnosticText:diagnosticCopy[prefs.language]||diagnosticCopy['en-US'],prefs,people:store.people(chosen.id),history:store.history(chosen.id),account:chosen.channel,
     connected:!!engine?.ready,live:!!engine?.live,status,update:updates?.view(),configured:!!connection,botPath:connection?.exe||'',dataPath:app.getPath('userData'),
     nextGlobal:chosen.id?store.globalNext(chosen.id):0,maximized:win?.isMaximized()||false,
     direct:{...auth.view(),clientId:bundledClient||store.meta('twitchClientId',''),bundled:!!bundledClient}};
+  diagnostics?.capture(chosen.id,value);return value;
 }
 function sendState(){if(!shuttingDown&&win&&!win.isDestroyed())win.webContents.send('state',snapshot());}
 function stopConnection(){engine?.stop();bridge?.removeAllListeners();bridge?.close();engine=null;bridge=null;store?.cancelQueue('Подключение изменено');}
@@ -87,6 +91,7 @@ app.whenReady().then(async()=>{
   fs.mkdirSync(app.getPath('userData'),{recursive:true});
   await prepareProfile(app.getPath('userData'),app.getVersion());
   store=new Store(path.join(app.getPath('userData'),'shoutouts.sqlite'));connection=loadPrivate('connection.json');
+  diagnostics=new Diagnostics(app.getPath('userData'));
   store.setPrefs({enabled:true});session=new AppSession(store);
   updates=new UpdateMonitor(store,app.getVersion(),release=>{
     sendState();
@@ -141,6 +146,21 @@ app.whenReady().then(async()=>{
       case 'tray':win.hide();return;
       case 'close':app.quit();return;
       case 'folder':await shell.openPath(app.getPath('userData'));return;
+      case 'copy-report':if(lastReportId)clipboard.writeText(lastReportId);return;
+      case 'send-logs':{
+        const t=diagnosticCopy[store.prefs().language]||diagnosticCopy['en-US'];
+        if(diagnosticBusy||smoke)return {cancelled:true};
+        diagnosticBusy=true;
+        try{
+          const chosen=target();
+          if(!diagnosticPending||diagnosticPending.hours!==arg||diagnosticPending.channel!==chosen.channel||Date.now()-diagnosticPending.to>3600000)
+            diagnosticPending=buildReport({root:app.getPath('userData'),product:'desktop',version:app.getVersion(),hours:arg,account:chosen,current:snapshot()});
+          const report=diagnosticPending;
+          const answer=await dialog.showMessageBox(win,{type:'question',title:t.title,message:t.confirm.replace('%1',report.channel).replace('%2',report.hours).replace('%3',report.events.length),buttons:[t.cancel,t.send],defaultId:0,cancelId:0,noLink:true});
+          if(answer.response!==1){diagnosticPending=null;return {cancelled:true};}
+          const result=await uploadReport(report);diagnosticPending=null;lastReportId=result.id;return result;
+        }catch(error){throw Error(t[error.message]||t.error);}finally{diagnosticBusy=false;}
+      }
       case 'reset-cooldowns':{
         canChange();
         const answer=await dialog.showMessageBox(win,{type:'question',title:'Сбросить таймауты?',message:'Сбросить персональные таймауты всех людей этого канала?',detail:'История сохранится. Шотаут возможен только после нового сообщения. Ограничения Twitch остаются.',buttons:['Отмена','Сбросить'],defaultId:0,cancelId:0,noLink:true});

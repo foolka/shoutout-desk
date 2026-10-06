@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="titlebar">
-    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.4.1</span></div>
+    <div class="brand"><img src="../assets/icon.png" alt=""><span>Shoutout Desk</span><span class="version">0.4.2</span></div>
     <div class="window-buttons">
       <button data-window="tray" title="Свернуть в трей" aria-label="Свернуть в трей"><i data-lucide="panel-bottom-close"></i></button>
       <span class="separator"></span>
@@ -64,6 +64,12 @@
         </div>
         <div class="setting-section"><h2><i data-lucide="radio-tower"></i>Рейды</h2><label class="check-row"><input id="raid-shoutouts" type="checkbox"><span>Автоотметки за рейды</span></label><p class="setting-help">Через 20 секунд после рейда, даже если стримера нет в списке. Если другой бот уже сделал Twitch-шотаут, повтор отменяется. Таймауты и лимиты Twitch остаются.</p></div>
         <div class="setting-section"><h2><i data-lucide="database"></i>Данные</h2><div class="action-row"><button id="import-data"><i data-lucide="upload"></i>Импорт</button><button id="export-data"><i data-lucide="download"></i>Экспорт</button><button id="open-folder"><i data-lucide="folder-open"></i>Папка данных</button></div></div>
+        <div class="setting-section"><h2><i data-lucide="file-clock"></i><span data-diagnostic="title">Diagnostics</span></h2>
+          <label class="field-label" for="diagnostic-period" data-diagnostic="period">Report period</label>
+          <div class="action-row"><select id="diagnostic-period"><option value="1" data-diagnostic="hour">Last hour</option><option value="24" selected data-diagnostic="day">24 hours</option><option value="168" data-diagnostic="week">7 days</option></select><button id="send-logs"><i data-lucide="upload"></i><span data-diagnostic="send">Send logs</span></button></div>
+          <div class="setting-help" data-diagnostic="help"></div>
+          <div id="diagnostic-result" class="diagnostic-result" role="status" hidden><span id="diagnostic-message"></span><code id="diagnostic-reference"></code><button id="copy-report" class="icon-button" hidden><i data-lucide="copy"></i></button></div>
+        </div>
         <div class="setting-section"><h2><i data-lucide="panel-top"></i>Приложение</h2><label class="check-row"><input id="start-tray" type="checkbox"><span>Запускать сразу свёрнутой в трей</span></label><label class="field-label spaced" for="language">Язык</label><select id="language"><option value="uk-UA">Українська</option><option value="ru-RU">Русский</option><option value="en-US">English</option></select><label class="check-row spaced"><input id="auto-updates" type="checkbox"><span>Уведомлять о новых версиях</span></label><div class="action-row spaced"><button id="check-update"><i data-lucide="refresh-cw"></i>Проверить обновления</button><span class="subtle" id="app-version"></span></div></div>
       </section>
     </main>
