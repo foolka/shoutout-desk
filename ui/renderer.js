@@ -1,6 +1,7 @@
 const $=id=>document.getElementById(id);
 let state=null,selected='',toastTimer,setupBusy=false,wizardStep=0,wizardBusy=false;
 const historyAdds=new Set();
+$('open-badges').onclick=()=>void cmd('badges').catch(()=>{});
 let diagnosticBusy=false;
 $('send-logs').onclick=async()=>{
   if(diagnosticBusy||!state)return;
@@ -42,7 +43,9 @@ function renderPeople(){
     const info=node('span',null,'chip-info');info.append(node('strong',person.login),node('small',person.queued?'В очереди':wait?remaining(person.nextAt):'Готов к отметке'));main.append(info);
     main.onclick=()=>{selected=selected===person.login?'':person.login;renderPeople();};
     const del=node('button',null,'chip-delete');del.title=`Удалить ${person.login}`;del.setAttribute('aria-label',del.title);del.append(icon('x'));del.onclick=()=>void cmd('remove',person.login).catch(()=>{});
-    chip.append(main,del);$('people-list').append(chip);
+    const badge=node('button',null,'chip-delete');badge.title=`Бейджик ${person.login}`;badge.setAttribute('aria-label',badge.title);badge.append(icon('contact-round'));badge.onclick=()=>void cmd('badges',person.login).catch(()=>{});
+    const test=node('button',null,'chip-delete');test.title=`Тест бейджика ${person.login}`;test.setAttribute('aria-label',test.title);test.append(icon('play'));test.onclick=async()=>{test.disabled=true;try{await cmd('badge-test',person.login);toast('Тестовая плашка отправлена в OBS');}catch{}finally{test.disabled=false;}};
+    chip.append(main,badge,test,del);$('people-list').append(chip);
   }
   $('people-empty').hidden=people.length>0;$('people-empty').querySelector('h2').textContent=state.people.length?'Ничего не найдено':'Список пуст';
   $('people-count').textContent=String(state.people.length);$('nav-count').textContent=String(state.people.length);

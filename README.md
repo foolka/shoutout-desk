@@ -1,6 +1,6 @@
 # Shoutout Desk
 
-**Sign-in fix in 0.4.1:** temporary Twitch and network failures recover automatically. Only invalid authorization displays the sign-in banner and a Windows notification (when allowed). People, history and cooldowns are preserved.
+**New in 0.5.0: [OBS shoutout badges](#badges)** with three designs, personal descriptions, a floating stamp and separate entrance/exit animations. People, history and cooldowns are preserved.
 
 [English](README.md) | [Українська](README.uk.md) | [Русский](README.ru.md)
 
@@ -43,6 +43,18 @@ A normal update on the same Windows profile preserves your data automatically: c
 5. People, history and cooldowns are **merged**, not replaced; importing again does not duplicate the same history. Pending actions are not replayed. Automation pauses after import: check the result and enable it when ready.
 
 Authorization is not imported. Keep the backup until you verify the result. The new database uses schema 3; to downgrade, restore a backup made before the upgrade instead of opening the migrated database with an old version.
+
+<a id="badges"></a>
+## OBS Shoutout Badges
+
+Open **Badges** in the people list, copy the source URL and add an OBS **Browser Source** sized **560 × 560**. The background is transparent. Keep Shoutout Desk running; its local source uses port `18771`. Copy the complete source URL, not the editor address. It remains stable across restarts in the same profile.
+
+- Three designs: **Air / Pass / Sticker**, each with independent editable colors. Avatar, name and optional description form a centered column. Long names shrink to one line; descriptions wrap. Sticker has no redundant address label.
+- Enable badges globally or per person. Add a description of up to 140 characters, choose a common or personal theme, and edit colors, gradient, border, corners, padding, fonts and sizes.
+- Select entrance and exit animations independently from ten effects each; adjust display duration. Customize the floating stamp's text, color, corner, angle and sizes, or turn it off. It never shifts other content.
+- **Test in OBS** only displays a badge; it does not send a Twitch shoutout or alter history/cooldowns. Tests work even with automatic display disabled. Automatic badges require a fresh confirmed shoutout for someone in your list; duplicate confirmations are coalesced.
+
+Click **Save** after editing. The badge editor currently uses Russian labels. Streamer.bot users should rerun its setup to update the bridge with avatar support. Keep the complete profile folder to preserve badge descriptions, themes and the source URL when moving installations: the ordinary people-list JSON export does not include badge customization. Do not publish the editor URL or profile files. The source is unavailable while the app is closed.
 
 <a id="setup"></a>
 ## Setup

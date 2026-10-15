@@ -6,6 +6,7 @@ const {prepareProfile,backupProfile}=require('./core/profile.cjs');
 const {exportBundle,importBundle,readDesktop}=require('./core/transfer.cjs');
 const {UpdateMonitor}=require('./core/update-monitor.cjs');
 const {Diagnostics,buildReport,uploadReport}=require('./core/diagnostics.cjs');
+const {Badges}=require('./core/badges/service.cjs');
 const diagnosticCopy=require('./core/diagnostic-copy.cjs');
 const {ObsSession:AppSession,HEARTBEAT_MS}=require('./core/session.cjs');
 const {Bridge}=require('./core/bridge.cjs');
@@ -23,7 +24,7 @@ app.setAppUserModelId('com.fermionaplay.shoutoutdesk');
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance)app.quit();
 let win,tray,store,session,bridge,engine,auth,updates,connection=null,status='Не подключено',settingUp=false,refreshing=false,shuttingDown=false;
-let diagnostics,diagnosticBusy=false,diagnosticPending=null,lastReportId='';
+let diagnostics,diagnosticBusy=false,diagnosticPending=null,lastReportId='',badges,badgeWindow;
 const icon=path.join(__dirname,'assets','icon.ico');
 function loadPrivate(name){try{const saved=JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),name),'utf8'));return JSON.parse(safeStorage.decryptString(Buffer.from(saved.encrypted,'base64')));}catch{return null;}}
 function savePrivate(name,value){
@@ -59,7 +60,8 @@ function connect(){
     if(!connection){status='Настройте Streamer.bot';sendState();return;}
     bridge=new Bridge(connection);status='Подключение к Streamer.bot';
   }
-  engine=new Engine(store,bridge,sendState);const transport=bridge,current=engine;
+  engine=new Engine(store,bridge,sendState,data=>badges?.confirm(data));const transport=bridge,current=engine;
+  transport.on('badgeShoutout',data=>badges?.confirm(data));
   transport.on('status',text=>{status=text;sendState();});transport.on('changed',sendState);
   transport.on('ready',async()=>{
     try{await current.connect();if(current!==engine||shuttingDown)return;if(prefs.provider==='bot')store.setMeta('botAccount',{id:current.account,channel:current.channel});status='Связь установлена';}
@@ -104,6 +106,11 @@ app.whenReady().then(async()=>{
   });
   if(!store.meta('botAccount'))store.setMeta('botAccount',store.lastAccount());
   auth=new TwitchAuth({saved:loadPrivate('twitch-auth.json'),save:value=>savePrivate('twitch-auth.json',value),pending:loadPrivate('twitch-login.json'),savePending:value=>savePrivate('twitch-login.json',value)});
+  badges=new Badges({store,account:()=>target().id,port:smoke?0:18771,onChange:sendState,profile:async login=>{
+    if(smoke)return null;
+    const user=await bridge?.call('profile',{login});return user?.profile||null;
+  }});
+  await badges.start().catch(()=>{});
   auth.on('authorized',()=>{if(store.prefs().provider==='direct'){store.setPrefs({enabled:true});connect();}});
   auth.on('change',sendState);auth.on('expired',()=>{
     if(store.prefs().provider==='direct'){
@@ -135,6 +142,14 @@ app.whenReady().then(async()=>{
     if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Invalid sender');
     switch(command){
       case 'state':return snapshot();
+      case 'badges':{
+        const url=badges.editor(typeof arg==='string'?arg:'');
+        if(badgeWindow&&!badgeWindow.isDestroyed()){badgeWindow.focus();badgeWindow.loadURL(url);return;}
+        badgeWindow=new BrowserWindow({width:1120,height:850,minWidth:360,minHeight:520,parent:win,show:false,title:'Бейджики · Shoutout Desk',icon,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});
+        badgeWindow.setMenu(null);badgeWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));badgeWindow.webContents.on('will-navigate',event=>event.preventDefault());
+        badgeWindow.loadURL(url);badgeWindow.once('ready-to-show',()=>badgeWindow?.show());badgeWindow.on('closed',()=>{badgeWindow=null;});return;
+      }
+      case 'badge-test':return badges.test(String(arg||''));
       case 'add':store.add(arg,target().id);break;
       case 'remove':store.remove(arg,target().id);break;
       case 'prefs':{
@@ -239,4 +254,4 @@ app.whenReady().then(async()=>{
   app.exit(1);
 });
 app.on('window-all-closed',()=>app.quit());
-app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;updates?.stop();auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});
+app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;badges?.close();updates?.stop();auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});

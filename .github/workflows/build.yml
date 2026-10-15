@@ -20,6 +20,14 @@ jobs:
       - run: npm run audit:source
       - run: npm test
       - run: npm run test:ui
+      - name: Check badge layouts, stamps and one-line nicknames
+        run: |
+          node tools/test-badge-designs.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tools/test-badge-stamp.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tools/test-badge-nickname-fit.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - run: npm run build
       - name: Install pinned Inno Setup compiler
         shell: pwsh
