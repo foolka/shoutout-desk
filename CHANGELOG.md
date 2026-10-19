@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1 - 2026-10-19
+
+- Preserve the rolling refresh budget across brief recoveries: a flapping source still cannot be refreshed more than once per minute or three times per five minutes.
+- Keep all 0.6.0 features: one-button local OBS setup, source health, stable URL, automatic reconnection, current-build checks and queued fresh badges. Saved data and the OBS plugin are unchanged.
+
 ## 0.6.0 - 2026-10-19
 
 - Add one-button local OBS protection to the standalone app. Detect existing OBS settings; keep the password encrypted on this Windows account. Disabled OBS control can be configured after closing OBS, with a protected backup.
