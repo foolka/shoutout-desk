@@ -47,6 +47,7 @@ test('personal themes retain descriptions and each palette independently from co
   const {service}=fixture(t);
   service.save({account:'123',login:'alice',person:{enabled:true,custom:true,description:'Keep my words',style:{design:'sticker',palettes:{sticker:{textColor:'#010203'}}}}});
   service.save({account:'123',enabled:true,style:{design:'pass',palettes:{pass:{accentColor:'#456789'}}}});
+  service.observe('00000000-0000-4000-8000-000000000001',service.build,'obs-browser');
   await service.test('alice');assert.equal(service.frame().event.style.design,'sticker');assert.equal(service.frame().event.description,'Keep my words');
   assert.equal(service.rule('alice').style.palettes.sticker.textColor,'#010203');assert.equal(service.rule('bob').style.design,'pass');
   const current=service.rule('alice');service.save({account:'123',login:'alice',person:{...current,style:{design:'air',palettes:{air:{textColor:'#a1b2c3'}}}}});

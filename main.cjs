@@ -7,6 +7,8 @@ const {exportBundle,importBundle,readDesktop}=require('./core/transfer.cjs');
 const {UpdateMonitor}=require('./core/update-monitor.cjs');
 const {Diagnostics,buildReport,uploadReport}=require('./core/diagnostics.cjs');
 const {Badges}=require('./core/badges/service.cjs');
+const {ObsRecovery}=require('./core/obs-control.cjs');
+const {prepareObs}=require('./core/obs-setup.cjs');
 const diagnosticCopy=require('./core/diagnostic-copy.cjs');
 const {ObsSession:AppSession,HEARTBEAT_MS}=require('./core/session.cjs');
 const {Bridge}=require('./core/bridge.cjs');
@@ -24,7 +26,7 @@ app.setAppUserModelId('com.fermionaplay.shoutoutdesk');
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance)app.quit();
 let win,tray,store,session,bridge,engine,auth,updates,connection=null,status='Не подключено',settingUp=false,refreshing=false,shuttingDown=false;
-let diagnostics,diagnosticBusy=false,diagnosticPending=null,lastReportId='',badges,badgeWindow;
+let diagnostics,diagnosticBusy=false,diagnosticPending=null,lastReportId='',badges,badgeWindow,obsRecovery;
 const icon=path.join(__dirname,'assets','icon.ico');
 function loadPrivate(name){try{const saved=JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),name),'utf8'));return JSON.parse(safeStorage.decryptString(Buffer.from(saved.encrypted,'base64')));}catch{return null;}}
 function savePrivate(name,value){
@@ -44,6 +46,7 @@ function snapshot(){
   const value={version:app.getVersion(),diagnosticText:diagnosticCopy[prefs.language]||diagnosticCopy['en-US'],prefs,people:store.people(chosen.id),history:store.history(chosen.id),account:chosen.channel,
     connected:!!engine?.ready,live:!!engine?.live,status,update:updates?.view(),configured:!!connection,botPath:connection?.exe||'',dataPath:app.getPath('userData'),
     nextGlobal:chosen.id?store.globalNext(chosen.id):0,maximized:win?.isMaximized()||false,
+    badgeSource:badges?.info(),obsRecovery:obsRecovery?.view(),
     direct:{...auth.view(),clientId:bundledClient||store.meta('twitchClientId',''),bundled:!!bundledClient}};
   diagnostics?.capture(chosen.id,value);return value;
 }
@@ -111,6 +114,14 @@ app.whenReady().then(async()=>{
     const user=await bridge?.call('profile',{login});return user?.profile||null;
   }});
   await badges.start().catch(()=>{});
+  obsRecovery=new ObsRecovery({
+    overlay:{view:()=>badges.info(),url:()=>badges.info().url},engine:{playing:()=>badges.playing()},
+    store:{meta:(...args)=>store.meta(...args),log:message=>{
+      const history=store.meta('obsRecoveryLog',[]);
+      store.setMeta('obsRecoveryLog',[...history,{at:Date.now(),message}].slice(-50));
+    }},changed:sendState,config:smoke?null:loadPrivate('obs-control.json')
+  });
+  if(!smoke)obsRecovery.start();
   auth.on('authorized',()=>{if(store.prefs().provider==='direct'){store.setPrefs({enabled:true});connect();}});
   auth.on('change',sendState);auth.on('expired',()=>{
     if(store.prefs().provider==='direct'){
@@ -150,6 +161,28 @@ app.whenReady().then(async()=>{
         badgeWindow.loadURL(url);badgeWindow.once('ready-to-show',()=>badgeWindow?.show());badgeWindow.on('closed',()=>{badgeWindow=null;});return;
       }
       case 'badge-test':return badges.test(String(arg||''));
+      case 'badge-copy-url':if(badges.info().url)clipboard.writeText(badges.info().url);return;
+      case 'obs-connect':{
+        if(smoke)throw Error('Подключение к настоящему OBS отключено в тестовом режиме');
+        if(!safeStorage.isEncryptionAvailable())throw Error('Windows не предоставила защищённое хранилище.');
+        let config,prepared=false;
+        if(arg?.local){
+          const file=path.join(app.getPath('appData'),'obs-studio/plugin_config/obs-websocket/config.json');
+          ({config,prepared}=prepareObs(file,{
+            running:()=>{
+              const {execFileSync}=require('node:child_process');
+              return /^"obs64\.exe"/im.test(execFileSync('tasklist.exe',['/FI','IMAGENAME eq obs64.exe','/FO','CSV','/NH'],{encoding:'utf8',windowsHide:true}));
+            },backup:raw=>savePrivate('obs-before-setup-'+Date.now()+'.json',{file,raw})
+          }));
+        }else config={port:Number(arg?.port),password:arg?.password};
+        if(!prepared)await obsRecovery.configure(config);
+        savePrivate('obs-control.json',config);
+        if(prepared)obsRecovery.usePrepared(config);
+        store.setMeta('obsAutoRecover',true);break;
+      }
+      case 'obs-auto':
+        if(arg&&!obsRecovery.config)throw Error('Сначала настройте защиту OBS');
+        store.setMeta('obsAutoRecover',!!arg);break;
       case 'add':store.add(arg,target().id);break;
       case 'remove':store.remove(arg,target().id);break;
       case 'prefs':{
@@ -254,4 +287,4 @@ app.whenReady().then(async()=>{
   app.exit(1);
 });
 app.on('window-all-closed',()=>app.quit());
-app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;badges?.close();updates?.stop();auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});
+app.on('before-quit',()=>{if(shuttingDown)return;shuttingDown=true;obsRecovery?.close();badges?.close();updates?.stop();auth?.dispose();stopConnection();tray?.destroy();session?.close();store?.close();});

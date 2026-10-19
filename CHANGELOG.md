@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 - 2026-10-19
+
+- Add one-button local OBS protection to the standalone app. Detect existing OBS settings; keep the password encrypted on this Windows account. Disabled OBS control can be configured after closing OBS, with a protected backup.
+- Monitor badge source heartbeats and asset versions. Reconnect after temporary failures and reload outdated overlay code while keeping the same source URL.
+- Recover only an active browser source whose URL still exactly matches this app. Wait 20 seconds without a heartbeat; limit refreshes to once per minute and three per five minutes. Never switch scenes, start/stop streaming or recording, or refresh a different URL.
+- Show source and protection status, a copyable source URL and the 560 x 560 dimensions in Settings. Optional manual connection settings remain available.
+- Keep new badges queued until a current viewer connects. Discard badges older than two minutes instead of replaying stale alerts. Already-started badges are not restarted from the beginning; restarting the app does not resend Twitch shoutouts.
+- Allow protection setup while OBS is closed and reset the retry budget after a healthy connection returns. A disabled protection closes its control connection.
+- Preserve people, history, cooldowns, badge descriptions, themes and source token. No database migration. This release does not change the OBS plugin.
+
 ## 0.5.0 - 2026-10-15
 
 - Add local OBS shoutout badges with a centered avatar, a one-line nickname and an optional personal description.

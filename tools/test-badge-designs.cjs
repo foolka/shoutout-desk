@@ -33,11 +33,12 @@ let browser;
   for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:950});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'editor-'+width+'.png'),fullPage:true});}
   await page.setViewportSize({width:1280,height:1000});await page.locator('.choose').filter({hasText:'sayrek_liss'}).click();await page.locator('#person-custom').check();await page.locator('#designs [data-design=pass]').click();await page.locator('#f-textColor').fill('#f5db83');await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#save-status').textContent==='Сохранено');
   assert.equal(service.rule('sayrek_liss').description,description);assert.equal(service.rule('sayrek_liss').style.design,'pass');assert.equal(service.rule('sayrek_liss').style.palettes.pass.textColor,'#f5db83');assert.equal(service.config().style.design,'air');
+  const overlay=await context.newPage();overlay.on('pageerror',e=>errors.push(e.message));await overlay.setViewportSize({width:560,height:560});await overlay.goto(url);
   await page.locator('#test-selected').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('отправлена'));
+  await overlay.locator('.shoutout-badge').waitFor({state:'visible'});
   assert.equal(service.frame().event.style.design,'pass');assert.equal(service.frame().event.description,description);
   assert.equal(service.info().url,url);assert.equal(JSON.stringify(service.rule('mrdratato')),otherBefore);assert.equal(JSON.stringify(store.history('123')),historyBefore);
   service.current=null;service.queue=[];
-  const overlay=await context.newPage();overlay.on('pageerror',e=>errors.push(e.message));await overlay.setViewportSize({width:560,height:560});await overlay.goto(url);
   await overlay.evaluate(()=>window.probe=new BadgeView(document.querySelector('.badge-stage')));
   let cases=0;
   for(const design of DESIGNS){

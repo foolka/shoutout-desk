@@ -37,6 +37,30 @@
     ['Для этого канала должен работать только один экземпляр автоотметок: приложение или OBS-плагин.','Run only one auto-shoutout instance for this channel: the app or the OBS plugin.','Для цього каналу має працювати лише один екземпляр автовідміток: програма або OBS-плагін.'],
     ['Проверяем авторизацию и подписку на события чата. Тестовые шотауты не отправляются.','Checking sign-in and chat subscriptions. No test shoutouts are sent.','Перевіряємо вхід і підписку на події чату. Тестові відмітки не надсилаються.'],['Повторить подключение','Retry connection','Повторити підключення'],['Подключаемся к Twitch','Connecting to Twitch','Підключаємося до Twitch'],['Код скопирован','Code copied','Код скопійовано'],['Установлена актуальная версия.','You are up to date.','Встановлено актуальну версію.']
   ];
+  rows.push(
+    ['Защита источника OBS','OBS source protection','Захист джерела OBS'],
+    ['Об автовосстановлении OBS','About OBS recovery','Про автовідновлення OBS'],
+    ['Автоматически восстанавливать источник','Automatically recover the source','Автоматично відновлювати джерело'],
+    ['Настроить защиту OBS','Set up OBS protection','Налаштувати захист OBS'],
+    ['Источник OBS подключён','OBS source connected','Джерело OBS підключено'],
+    ['Источник OBS не подключён','OBS source disconnected','Джерело OBS не підключено'],
+    ['В OBS старая страница источника','OBS source page is outdated','Сторінка джерела OBS застаріла'],
+    ['Не настроено','Not configured','Не налаштовано'],
+    ['Защита выключена','Protection disabled','Захист вимкнено'],
+    ['Защита OBS включена','OBS protection enabled','Захист OBS увімкнено'],
+    ['Защита настроена. Запустите OBS','Protection ready. Start OBS','Захист налаштовано. Запустіть OBS'],
+    ['Источник OBS отвечает','OBS source is responding','Джерело OBS відповідає'],
+    ['Ожидание источника OBS','Waiting for OBS source','Очікування джерела OBS'],
+    ['Источник не восстановлен: проверьте OBS','Source not recovered: check OBS','Джерело не відновлено: перевірте OBS'],
+    ['Источник обновлён; ожидание подключения','Source refreshed; waiting for connection','Джерело оновлено; очікування підключення'],
+    ['Источник с текущим URL не найден в OBS','No OBS source uses the current URL','Джерело з поточним URL не знайдено в OBS'],
+    ['Источник неактивен в текущей сцене','Source is inactive in the current scene','Джерело неактивне в поточній сцені'],
+    ['Ссылка источника бейджиков · 560 × 560','Badge source URL · 560 × 560','Посилання джерела бейджів · 560 × 560'],
+    ['Ссылка источника бейджиков','Badge source URL','Посилання джерела бейджів'],
+    ['Скопировать ссылку','Copy URL','Скопіювати посилання'],['Ссылка скопирована','URL copied','Посилання скопійовано'],
+    ['Ручное подключение','Manual connection','Ручне підключення'],['Порт OBS','OBS port','Порт OBS'],['Пароль OBS','OBS password','Пароль OBS'],['Подключить OBS','Connect OBS','Підключити OBS'],
+    ['Если активный источник бейджиков не отвечает 20 секунд, обновляется только он. Сцены и эфир не меняются. Не чаще раза в минуту, до трёх попыток за пять минут.','Refreshes only the active badge source after 20 seconds without a response. No scene or stream changes. At most once a minute and three times in five minutes.','Оновлює лише активне джерело бейджів після 20 секунд без відповіді. Сцени й ефір не змінюються. Не частіше разу на хвилину, до трьох спроб за п’ять хвилин.']
+  );
   const map=new Map(rows.map(row=>[row[0],row]));let language='ru-RU';
   const originals=new WeakMap(),attributes=new WeakMap();
   function translate(value){

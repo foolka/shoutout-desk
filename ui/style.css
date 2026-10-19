@@ -16,6 +16,13 @@ select option:hover,select option:focus{background:#34463e;outline:none}
 select option:checked{background:#314c40;color:#dcf7eb}
 select option::checkmark{color:var(--mint)}
 .spaced{margin-top:22px}.setting-help{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 16px}
+.obs-recovery h2 .icon-button{margin-left:auto;width:30px;height:30px;flex:none}
+.obs-recovery .connection-row strong,.obs-recovery .connection-row span{overflow-wrap:anywhere}
+.obs-manual summary{cursor:pointer;color:var(--muted);font-size:12px}
+.obs-fields{display:grid;grid-template-columns:110px minmax(100px,1fr) 38px;align-items:end;gap:12px;margin-top:12px}
+.obs-fields label{display:grid;gap:7px;font-size:12px;color:var(--muted)}
+.obs-fields input{width:100%;min-width:0}
+@media(max-width:600px){.obs-fields{grid-template-columns:90px minmax(60px,1fr) 38px;gap:7px}}
 .nav span{min-width:0;overflow-wrap:anywhere;text-align:left}.nav{height:auto;min-height:40px}
  .update-banner{width:100%;margin-bottom:16px;border-color:#79bba4;color:#b4e6d4;justify-content:flex-start;gap:8px;flex-wrap:wrap;}
  .update-banner[hidden]{display:none;}

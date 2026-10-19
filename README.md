@@ -1,6 +1,6 @@
 # Shoutout Desk
 
-**New in 0.5.0: [OBS shoutout badges](#badges)** with three designs, personal descriptions, a floating stamp and separate entrance/exit animations. People, history and cooldowns are preserved.
+**New in 0.6.0: [automatic OBS source recovery](#obs-recovery)** with one-button local setup, connection status and preserved badge settings. Standalone app only; the OBS plugin is unchanged.
 
 [English](README.md) | [Українська](README.uk.md) | [Русский](README.ru.md)
 
@@ -55,6 +55,17 @@ Open **Badges** in the people list, copy the source URL and add an OBS **Browser
 - **Test in OBS** only displays a badge; it does not send a Twitch shoutout or alter history/cooldowns. Tests work even with automatic display disabled. Automatic badges require a fresh confirmed shoutout for someone in your list; duplicate confirmations are coalesced.
 
 Click **Save** after editing. The badge editor currently uses Russian labels. Streamer.bot users should rerun its setup to update the bridge with avatar support. Keep the complete profile folder to preserve badge descriptions, themes and the source URL when moving installations: the ordinary people-list JSON export does not include badge customization. Do not publish the editor URL or profile files. The source is unavailable while the app is closed.
+
+## Automatic OBS source recovery
+
+<a id="obs-recovery"></a>
+In **Settings > OBS source protection**, press **Set up OBS protection** once. Existing local OBS credentials are detected and encrypted for this Windows account. If control is disabled, close OBS normally when not streaming/recording, press the button again, then launch OBS. Current OBS settings are backed up before any change. Manual connection is optional.
+
+The overlay reconnects after a temporary outage and reloads when its files change. After 20 seconds without a valid OBS heartbeat, protection can refresh only an active browser source with this app's exact URL. Refreshes are limited to once per minute and three per five minutes; scenes, streaming and recording are never changed. Disabled protection closes its control connection. Use one shared browser source across scenes.
+
+Badges wait for a connected viewer for up to two minutes, then expire. An ordinary browser preview can display badges but does not count as OBS for recovery. Already-started badges continue only for their remaining duration; old badges and Twitch shoutouts are not replayed after restarting the app. Source URL, descriptions and themes stay in the existing profile. A source loaded before 0.6.0 needs one refresh to load the new heartbeat; enabled protection can do this when it is active.
+
+Protection cannot recreate a deleted source or fix a changed URL, occupied local port or a crashed OBS process. Check the status shown in Settings. Keep the application running. OBS 28+ with the bundled WebSocket server is required for controlled refresh; the ordinary shoutout app still works without OBS.
 
 <a id="setup"></a>
 ## Setup

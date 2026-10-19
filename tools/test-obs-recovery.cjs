@@ -1,0 +1,52 @@
+const {chromium,_electron:electron}=require('playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {Store}=require('../core/store.cjs'),{Badges}=require('../core/badges/service.cjs');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'test-output/obs-recovery');
+fs.mkdirSync(out,{recursive:true});
+const store=new Store(':memory:');store.rememberAccount('123','demo_channel');store.add('demo_streamer');
+let service=new Badges({store,account:()=> '123',port:0}),browser,app;
+const errors=[];
+(async()=>{
+  await service.start();const url=service.info().url,port=service.server.address().port;
+  await service.test('demo_streamer');assert.equal(service.current,null);
+  browser=await chromium.launch({channel:'msedge',headless:true});
+  const page=await browser.newPage({viewport:{width:560,height:560},userAgent:'obs-browser/2.26 OBSStudio/32.2.2'});
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(url);await page.locator('.shoutout-badge').waitFor({state:'visible'});
+  assert.equal(service.info().obsClients,1);assert.equal(service.queue.length,0);
+  await page.screenshot({path:path.join(out,'connected-badge.png')});
+  await new Promise(resolve=>{service.server.once('close',resolve);service.close();});
+  await page.locator('.shoutout-badge').waitFor({state:'hidden'});
+  service=new Badges({store,account:()=> '123',port});await service.start();
+  assert.equal(service.info().url,url);
+  await page.waitForFunction(async()=>{const response=await fetch(location.pathname.replace('/overlay/','/api/view/'));return response.ok;});
+  await service.test('demo_streamer');await page.locator('.shoutout-badge').waitFor({state:'visible'});
+  assert.equal(service.info().obsClients,1);
+  const navigated=page.waitForEvent('load');
+  service.build='a'.repeat(64);await navigated;
+  assert.equal(await page.locator('meta[name=badge-build]').getAttribute('content'),service.build);
+  await browser.close();browser=null;service.close();store.close();
+
+  const profile=fs.mkdtempSync(path.join(out,'profile-'));
+  const seed=new Store(path.join(profile,'shoutouts.sqlite'));
+  seed.rememberAccount('123','demo_channel');seed.setMeta('botAccount',{id:'123',channel:'demo_channel'});seed.setPrefs({language:'ru-RU'});seed.add('demo_streamer');seed.close();
+  const env={...process.env,SHOUTOUT_DESK_TEST_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
+  const exe=process.argv[2];
+  app=await electron.launch({...(exe?{executablePath:path.resolve(exe)}:{}),args:[...(exe?[]:[root]),'--smoke-test'],env});
+  const ui=await app.firstWindow();ui.on('pageerror',error=>errors.push(error.message));
+  await ui.locator('[data-view=settings]').click();
+  await ui.locator('#obs-local').waitFor();
+  const state=await ui.evaluate(()=>desk.command('state'));
+  assert.equal(state.obsRecovery.enabled,false);assert.equal(state.badgeSource.ready,true);
+  assert.equal(await ui.locator('#badge-source-url').inputValue(),state.badgeSource.url);
+  await ui.locator('#obs-auto').click();
+  await ui.waitForFunction(()=>!document.querySelector('#obs-auto').checked);
+  for(const [width,height] of [[1100,850],[760,560]]){
+    await app.evaluate(({BrowserWindow},size)=>BrowserWindow.getAllWindows()[0].setSize(...size),[width,height]);
+    await ui.locator('#obs-local').scrollIntoViewIfNeeded();
+    assert.equal(await ui.evaluate(()=>document.querySelector('main').scrollWidth>document.querySelector('main').clientWidth),false);
+    await ui.screenshot({path:path.join(out,'settings-'+width+'.png')});
+  }
+  await app.close();app=null;assert.deepEqual(errors,[]);
+  console.log('OBS recovery: queued badge, server restart on stable URL, build reload, source status, protected toggle, compact settings passed. No live OBS or Twitch requests.');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(async()=>{if(app)await app.close();if(browser)await browser.close();service.close();try{store.close();}catch{}});

@@ -3,6 +3,24 @@ let state=null,selected='',toastTimer,setupBusy=false,wizardStep=0,wizardBusy=fa
 const historyAdds=new Set();
 $('open-badges').onclick=()=>void cmd('badges').catch(()=>{});
 let diagnosticBusy=false;
+let obsBusy=false;
+function renderObs(){
+  const recovery=state?.obsRecovery||{},source=state?.badgeSource||{};
+  $('obs-auto').checked=!!recovery.enabled;
+  $('obs-recovery-status').textContent=recovery.status||'Не настроено';
+  $('badge-source-health').textContent=source.error|| (source.obsClients>0?'Источник OBS подключён':source.outdated?'В OBS старая страница источника':'Источник OBS не подключён');
+  $('badge-source-url').value=source.url||'';
+  $('badge-copy-url').disabled=!source.url;
+}
+async function configureObs(local){
+  if(obsBusy)return;obsBusy=true;$('obs-local').disabled=true;$('obs-connect').disabled=true;
+  try{render(await cmd('obs-connect',local?{local:true}:{port:Number($('obs-ws-port').value),password:$('obs-ws-password').value}));$('obs-ws-password').value='';toast(state.obsRecovery.connected?'Защита OBS включена':'Защита настроена. Запустите OBS');}
+  catch{}finally{obsBusy=false;$('obs-local').disabled=false;$('obs-connect').disabled=false;}
+}
+$('obs-local').onclick=()=>void configureObs(true);
+$('obs-connect').onclick=()=>void configureObs(false);
+$('obs-auto').onchange=async()=>{try{render(await cmd('obs-auto',$('obs-auto').checked));}catch{renderObs();}};
+$('badge-copy-url').onclick=()=>void cmd('badge-copy-url').then(()=>toast('Ссылка скопирована')).catch(()=>{});
 $('send-logs').onclick=async()=>{
   if(diagnosticBusy||!state)return;
   diagnosticBusy=true;$('send-logs').disabled=true;$('diagnostic-period').disabled=true;
@@ -113,7 +131,7 @@ function render(next){
   $('direct-identity').textContent=needsLogin?'Нужно повторно войти в Twitch':state.direct.status==='restoring'?'Проверяем сохранённый вход':state.direct.status==='retrying'?'Нет соединения с Twitch. Повторяем автоматически; вход сохранён.':state.direct.user?`Аккаунт: ${state.direct.user.login}${state.account?' · Канал: '+state.account:''}`:'Вход не выполнен';
   $('logout').hidden=!state.direct.user;
   $('maximize').title=state.maximized?'Восстановить':'Развернуть';$('maximize').setAttribute('aria-label',$('maximize').title);
-  renderPeople();renderHistory();renderWizard();
+  renderPeople();renderHistory();renderWizard();renderObs();
 }
 function renderWizard(){
   if(!state||!$('direct-wizard').open)return;
