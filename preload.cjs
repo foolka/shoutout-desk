@@ -5,6 +5,8 @@ allowed.add('send-logs');allowed.add('copy-report');
 allowed.add('badges');allowed.add('badge-test');
 allowed.add('obs-connect');allowed.add('obs-auto');allowed.add('badge-copy-url');
 contextBridge.exposeInMainWorld('desk',{
+  taskbarStatus:()=>ipcRenderer.invoke('desk:taskbarStatus'),
+  taskbarPin:()=>ipcRenderer.invoke('desk:taskbarPin'),
   command:(name,arg)=>{if(!allowed.has(name))return Promise.reject(Error('Invalid command'));return ipcRenderer.invoke('command',name,arg);},
   onState:callback=>{const handler=(_event,state)=>callback(state);ipcRenderer.on('state',handler);return()=>ipcRenderer.removeListener('state',handler);}
 });

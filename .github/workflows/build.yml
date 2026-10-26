@@ -21,6 +21,7 @@ jobs:
       - run: npm test
       - run: npm run test:ui
       - run: npm run test:obs-recovery
+      - run: node tools/test-taskbar-ui.cjs
       - name: Check badge layouts, stamps and one-line nicknames
         run: |
           node tools/test-badge-designs.cjs
@@ -29,6 +30,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node tools/test-badge-nickname-fit.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare Node-API headers for the taskbar module
+        run: npx --yes node-gyp@11.5.0 install --target=20.17.0
       - run: npm run build
       - name: Install pinned Inno Setup compiler
         shell: pwsh

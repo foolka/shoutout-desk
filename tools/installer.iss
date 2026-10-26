@@ -61,8 +61,8 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"; Flags: unchecked
 Source: "{#PackageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "Portable.cmd"
 [Icons]
 #ifndef TestRoot
-Name: "{group}\Shoutout Desk"; Filename: "{app}\ShoutoutDesk.exe"
-Name: "{autodesktop}\Shoutout Desk"; Filename: "{app}\ShoutoutDesk.exe"; Tasks: desktopicon
+Name: "{group}\Shoutout Desk"; Filename: "{app}\ShoutoutDesk.exe"; WorkingDir: "{app}"; AppUserModelID: "com.fermionaplay.shoutoutdesk"
+Name: "{autodesktop}\Shoutout Desk"; Filename: "{app}\ShoutoutDesk.exe"; WorkingDir: "{app}"; AppUserModelID: "com.fermionaplay.shoutoutdesk"; Tasks: desktopicon
 #endif
 [Code]
 function ProcessGuard(): String;

@@ -1,8 +1,8 @@
 const {packager}=require('@electron/packager');const path=require('node:path');const fs=require('node:fs');
-(async()=>{
+(async()=>{ require('./build-taskbar.cjs').buildTaskbar();
   const root=path.resolve(__dirname,'..'),out=path.join(root,'release');
   const [built]=await packager({dir:root,name:'ShoutoutDesk',executableName:'ShoutoutDesk',platform:'win32',arch:'x64',
-    out,overwrite:true,icon:path.join(root,'assets','icon.ico'),asar:true,prune:true,
+    out,overwrite:true,icon:path.join(root,'assets','icon.ico'),asar: { unpack: '**/*.node' },prune:true,
     ignore:file=>{const rel=file.replace(/\\/g,'/').replace(/^\//,'');return !!rel&&!['assets','bridge','core','ui','node_modules','main.cjs','preload.cjs','package.json','package-lock.json','twitch-client.json'].includes(rel.split('/')[0]);},
     appVersion:require('../package.json').version,win32metadata:{CompanyName:'FermionaPlay',FileDescription:'Shoutout Desk',ProductName:'Shoutout Desk'}});
   const target=path.join(out,'ShoutoutDesk');

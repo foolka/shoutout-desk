@@ -1,13 +1,15 @@
 {
   "name": "shoutout-desk",
   "productName": "Shoutout Desk",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Local Twitch shoutout manager with direct and Streamer.bot connections",
   "private": true,
   "license": "GPL-2.0-or-later",
   "author": "FermionaPlay",
   "repository": "github:foolka/shoutout-desk",
-  "engines": {"node": ">=24.14.0 <25"},
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -19,6 +21,15 @@
     "package": "node tools/package.cjs",
     "audit:source": "node tools/audit-source.cjs"
   },
-  "dependencies": { "lucide": "0.468.0", "@twurple/api": "8.2.0", "@twurple/auth": "8.2.0", "@twurple/eventsub-ws": "8.2.0" },
-  "devDependencies": { "electron": "42.11.8", "@electron/packager": "20.3.0", "playwright": "1.58.2" }
+  "dependencies": {
+    "@twurple/api": "8.2.0",
+    "@twurple/auth": "8.2.0",
+    "@twurple/eventsub-ws": "8.2.0",
+    "lucide": "0.468.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "42.11.18",
+    "playwright": "1.58.2"
+  }
 }

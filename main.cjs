@@ -140,6 +140,7 @@ app.whenReady().then(async()=>{
   });
   win=new BrowserWindow({width:1040,height:740,minWidth:760,minHeight:560,frame:false,show:false,backgroundColor:'#181a1d',icon,
     webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  require('./core/taskbar.cjs').attachTaskbar({app,shell,ipcMain,win,test:smoke||!!process.env.SHOUTOUT_DESK_TEST_DATA,name:'Shoutout Desk',appId:'com.fermionaplay.shoutoutdesk'});
   win.setMenu(null);win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());
   win.loadFile(path.join(__dirname,'ui','index.html'));win.once('ready-to-show',()=>{if(!startInTray&&!store.prefs().startInTray)win.show();});
   win.on('maximize',sendState);win.on('unmaximize',sendState);

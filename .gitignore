@@ -17,3 +17,5 @@ twitch-login.json
 *.pdb
 .env*
 Thumbs.db
+/core/taskbar-native.node
+/test-results/taskbar/
