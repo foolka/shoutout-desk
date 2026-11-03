@@ -20,6 +20,7 @@ jobs:
       - run: npm run audit:source
       - run: npm test
       - run: npm run test:ui
+      - run: npm run test:startup-ui
       - run: npm run test:obs-recovery
       - run: node tools/test-taskbar-ui.cjs
       - name: Check badge layouts, stamps and one-line nicknames

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1 - 2026-11-03
+
+- Add --start-window to explicitly open the normal window from Launch Desk OBS, overriding the saved tray preference for this launch only.
+- Keep --start-tray launches hidden, including repeated launch requests; no change to saved preferences, people or history.
+
 ## 0.7.0 - 2026-11-03
 
 - Give incoming raids priority over queued chat shoutouts, including when the guest message arrives first. Recheck priority before direct Twitch delivery.

@@ -18,7 +18,7 @@ const {TwitchAuth,clientId,safeError,publicError}=require('./core/twitch-auth.cj
 const {runningBots,install,atomicWrite}=require('./core/setup.cjs');
 const bundledClient=require('./twitch-client.json').clientId;
 const smoke=process.argv.includes('--smoke-test');
-const startInTray=process.argv.includes('--start-tray');
+const {startInTray}=require('./core/startup-mode.cjs');
 const portable=process.argv.includes('--portable')||fs.existsSync(path.join(path.dirname(process.execPath),'portable_mode.txt'));
 if(portable)app.setPath('userData',path.join(path.dirname(process.execPath),'ShoutoutDesk-data'));
 if(process.env.SHOUTOUT_DESK_TEST_DATA)app.setPath('userData',path.resolve(process.env.SHOUTOUT_DESK_TEST_DATA));
@@ -90,7 +90,7 @@ async function refreshStatus(){
   finally{refreshing=false;sendState();}
 }
 function showWindow(){win.show();if(win.isMinimized())win.restore();win.focus();}
-app.on('second-instance',()=>{if(win)showWindow();});
+app.on('second-instance',(_,argv)=>{if(win&&!startInTray(argv))showWindow();});
 app.whenReady().then(async()=>{
   if(!primaryInstance)return;
   fs.mkdirSync(app.getPath('userData'),{recursive:true});
@@ -142,7 +142,7 @@ app.whenReady().then(async()=>{
     webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   require('./core/taskbar.cjs').attachTaskbar({app,shell,ipcMain,win,test:smoke||!!process.env.SHOUTOUT_DESK_TEST_DATA,name:'Shoutout Desk',appId:'com.fermionaplay.shoutoutdesk'});
   win.setMenu(null);win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());
-  win.loadFile(path.join(__dirname,'ui','index.html'));win.once('ready-to-show',()=>{if(!startInTray&&!store.prefs().startInTray)win.show();});
+  win.loadFile(path.join(__dirname,'ui','index.html'));win.once('ready-to-show',()=>{if(!startInTray(process.argv,store.prefs().startInTray))win.show();});
   win.on('maximize',sendState);win.on('unmaximize',sendState);
   tray=new Tray(nativeImage.createFromPath(icon));tray.setToolTip('Shoutout Desk');
   const updateTray=()=>tray.setContextMenu(Menu.buildFromTemplate([

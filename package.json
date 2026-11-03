@@ -1,7 +1,7 @@
 {
   "name": "shoutout-desk",
   "productName": "Shoutout Desk",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Local Twitch shoutout manager with direct and Streamer.bot connections",
   "private": true,
   "license": "GPL-2.0-or-later",
@@ -16,6 +16,7 @@
     "test": "node --test tests/*.test.cjs",
     "build": "node tools/build.cjs",
     "test:ui": "node tools/test-public-ui.cjs",
+    "test:startup-ui": "node tools/test-startup-ui.cjs",
     "test:obs-recovery": "node tools/test-obs-recovery.cjs",
     "installer": "node tools/build-installer.cjs",
     "package": "node tools/package.cjs",
