@@ -14,16 +14,17 @@ let browser;
 (async()=>{
   await service.start();const url=service.info().url;
   browser=await chromium.launch({headless:true,channel:'chrome'});
-  const context=await browser.newContext();await context.route('https://static-cdn.jtvnw.net/**',route=>route.fulfill({contentType:'image/png',body:fs.readFileSync(path.join(__dirname,'../assets/icon.png'))}));
+  const context=await browser.newContext();await context.route('https://static-cdn.jtvnw.net/**',route=>route.fulfill({contentType:'image/png',body:fs.readFileSync(path.join(__dirname,'../tests/fixtures/badge-avatar.png'))}));
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setViewportSize({width:1280,height:1000});await page.goto(service.editor('sayrek_liss'));
   await page.waitForFunction(()=>document.querySelector('#description').value.length>0);
   assert.equal(await page.locator('#description').inputValue(),description);assert(await page.locator('[data-design=air]').last().count());
-  assert.equal(await page.locator('#designs button').count(),3);assert(await page.locator('#designs button').first().isDisabled());
+  assert.equal(await page.locator('#designs button').count(),6);assert(await page.locator('#designs button').first().isDisabled());
   await page.locator('#default-theme').click();
-  const chosen={air:'#ffbb88',pass:'#3b254a',sticker:'#bdd8ef'};
+  const chosen={air:'#ffbb88',pass:'#3b254a',sticker:'#bdd8ef',terminal:'#153a2b',ticket:'#ffdde5',frame:'#e7f0fb'};
   for(const design of DESIGNS){await page.locator('#designs [data-design='+design.id+']').click();await page.locator('#f-background1').fill(chosen[design.id]);await page.locator('#f-stampColor').fill('#9b3f63');}
   for(const design of DESIGNS){await page.locator('#designs [data-design='+design.id+']').click();assert.equal(await page.locator('#f-background1').inputValue(),chosen[design.id]);}
+  await page.locator('#designs [data-design=sticker]').click();
   await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#save-status').textContent==='Сохранено');
   assert.equal(service.config().style.design,'sticker');for(const design of DESIGNS)assert.equal(service.config().style.palettes[design.id].background1,chosen[design.id]);
   await page.reload();await page.locator('#designs [aria-pressed=true]').waitFor();assert.equal(await page.locator('#f-background1').inputValue(),chosen.sticker);
@@ -62,12 +63,12 @@ let browser;
         assert(geometry.textsFit,JSON.stringify({design:design.id,font,long,geometry}));assert(geometry.noTextOverlap,JSON.stringify({design:design.id,font,long,geometry}));assert(geometry.avatarCentered);assert(geometry.stampAbsolute);assert(geometry.height<=492);cases++;
       }
     }
-    await overlay.evaluate(data=>window.probe.render(data),{login:'sayrek_liss',name:'Sayrek_Liss',description,style:style({design:design.id}),avatar:'https://static-cdn.jtvnw.net/test-avatar.png'});
+    await overlay.evaluate(data=>window.probe.render(data),{login:'stream_friend',name:'Stream_Friend',description:'Игры, разговоры и хорошие истории.',style:style({design:design.id}),avatar:'https://static-cdn.jtvnw.net/test-avatar.png'});
     await overlay.waitForFunction(()=>document.querySelector('.badge-avatar img').naturalWidth>0);
     await overlay.screenshot({path:path.join(out,design.id+'.png'),omitBackground:true});
     for(const exitEffect of EFFECTS){const result=await overlay.evaluate(data=>{window.probe.play(data,data.style.duration*1000+700);const animation=window.probe.animation;const frames=animation.effect.getKeyframes();window.probe.hide();return frames.at(-1).opacity;},{login:'viewer',name:'Viewer',description:'',style:style({design:design.id,exitEffect})});assert.equal(Number(result),0);}
     await overlay.evaluate(data=>window.probe.render(data),{login:'viewer',name:'<img src=x onerror=alert(1)>',description:'',style:style({design:design.id})});
     assert.equal(await overlay.locator('.badge-description').evaluate(el=>getComputedStyle(el).display),'none');assert.equal(await overlay.locator('.badge-name img').count(),0);
   }
-  assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,cases,designs:3,editorWidths:4,exitAnimations:30,palettesPersist:true,sourceUrlUnchanged:true,descriptionsPreserved:true}));
+  assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,cases,designs:DESIGNS.length,editorWidths:4,exitAnimations:DESIGNS.length*EFFECTS.length,palettesPersist:true,sourceUrlUnchanged:true,descriptionsPreserved:true}));
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{await browser?.close();service.close();store.close();});

@@ -26,6 +26,8 @@ jobs:
         run: |
           node tools/test-badge-designs.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tools/test-badge-customization.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node tools/test-badge-stamp.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node tools/test-badge-nickname-fit.cjs
