@@ -1,7 +1,7 @@
 {
   "name": "shoutout-desk",
   "productName": "Shoutout Desk",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Local Twitch shoutout manager with direct and Streamer.bot connections",
   "private": true,
   "license": "GPL-2.0-or-later",
@@ -14,6 +14,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
+    "test:badge-custom": "node tools/test-badge-custom.cjs",
     "build": "node tools/build.cjs",
     "test:ui": "node tools/test-public-ui.cjs",
     "test:startup-ui": "node tools/test-startup-ui.cjs",
@@ -26,6 +27,7 @@
     "@twurple/api": "8.2.0",
     "@twurple/auth": "8.2.0",
     "@twurple/eventsub-ws": "8.2.0",
+    "dompurify": "3.4.17",
     "lucide": "0.468.0"
   },
   "overrides": {

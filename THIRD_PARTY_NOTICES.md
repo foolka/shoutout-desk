@@ -1,5 +1,7 @@
 # Third-Party Notices
 
+- DOMPurify 3.4.17: Apache-2.0 OR MPL-2.0. Sanitizes custom badge HTML; packaged dependencies retain its license. https://github.com/cure53/DOMPurify
+
 Shoutout Desk: Copyright (c) 2026 FermionaPlay contributors. GPL-2.0-or-later.
 
 - Electron: MIT and bundled Chromium/Node/V8 notices. Runtime retains LICENSE and LICENSES.chromium.html. https://github.com/electron/electron

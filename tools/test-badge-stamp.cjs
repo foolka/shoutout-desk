@@ -15,7 +15,7 @@ let browser;
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(service.editor('sayrek_liss'));await page.locator('#description').filter({visible:true}).waitFor();
   assert.equal(await page.locator('#description').inputValue(),saved.people.sayrek_liss.description);
-  assert.equal(await page.locator('.badge-stamp span').textContent(),'СТРИМЕР');
+  assert.equal(await page.locator('#preview .badge-stamp span').textContent(),'СТРИМЕР');
   assert.equal(await page.locator('#f-stampEnabled').isDisabled(),true);
   await page.locator('#default-theme').click();
   await page.locator('#f-stampText').fill('АВТОР');await page.locator('#f-stampPosition').selectOption('bottom-left');
@@ -24,7 +24,7 @@ let browser;
   const theme=service.config().style;assert.equal(theme.stampText,'АВТОР');assert.equal(theme.stampAngle,22);assert.equal(theme.stampSize,192);assert.equal(theme.stampFontSize,30);assert.equal(theme.palettes[theme.design].stampColor,'#cc3344');
   assert.deepEqual({...service.config().people},saved.people);
   await page.reload();await page.locator('#f-stampText').waitFor();assert.equal(await page.locator('#f-stampText').inputValue(),'АВТОР');
-  await page.locator('#f-stampEnabled').uncheck();assert.equal(await page.locator('.badge-stamp-slot').isVisible(),false);assert.equal(await page.locator('#f-stampText').isDisabled(),true);
+  await page.locator('#f-stampEnabled').uncheck();assert.equal(await page.locator('#preview .badge-stamp-slot').isVisible(),false);assert.equal(await page.locator('#f-stampText').isDisabled(),true);
   await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#save-status').textContent==='Сохранено');assert.equal(service.config().style.stampEnabled,false);
   for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'editor-'+width+'.png'),fullPage:true});}
   const overlay=await browser.newPage();await overlay.goto(service.info().url);await overlay.waitForFunction(()=>!!window.BadgeView);

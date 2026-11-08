@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 - 2026-11-08
+
+- Add a seventh badge mode: custom HTML/CSS with a live preview, variable reference, starter template and copyable AI brief.
+- Support common and per-streamer templates, inline style blocks and optional empty-field hiding. Keep all six preset designs and their palettes.
+- Isolate templates in a sandbox without scripts or same-origin access, sanitize HTML with DOMPurify and block external resources. Fetch only the validated Twitch avatar in the trusted renderer and pass it as an embedded image.
+- Include renderer and sanitizer changes in the OBS source build hash. Reload an already-open outdated source before displaying queued custom badges.
+- Preserve profiles, descriptions, source URLs, history, cooldowns and authorization. No database migration or profile replacement.
+- Test template persistence, legacy data, eight editor widths, avatars, hostile input, single-block HTML/CSS and stale-source recovery.
+
 ## 0.7.1 - 2026-11-03
 
 - Add --start-window to explicitly open the normal window from Launch Desk OBS, overriding the saved tray preference for this launch only.

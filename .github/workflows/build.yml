@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run audit:source
       - run: npm test
+      - run: npm run test:badge-custom
       - run: npm run test:ui
       - run: npm run test:startup-ui
       - run: npm run test:obs-recovery

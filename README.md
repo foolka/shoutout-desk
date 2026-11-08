@@ -1,5 +1,7 @@
 # Shoutout Desk
 
+**0.8.0: Custom HTML/CSS badges.** Select the seventh badge design, use the variable list and live preview, or copy the AI brief with your design requirements. Templates can be shared by all streamers or saved individually. All six presets and existing data remain intact. [Template contract](docs/custom-badges.md).
+
 **0.7.1:** Launch Desk OBS can choose the normal window or system tray. `--start-window` overrides the saved tray preference for this launch; `--start-tray` stays hidden even for a repeated launch. Neither argument changes your saved preferences.
 
 **0.7.0: Raid priority, repeat raid shoutouts within Twitch limits and six customizable badge designs.**
