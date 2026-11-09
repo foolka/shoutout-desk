@@ -18,4 +18,4 @@ twitch-login.json
 .env*
 Thumbs.db
 /core/taskbar-native.node
-/test-results/taskbar/
+/test-results/
