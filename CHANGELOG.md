@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 - 2026-11-11
+
+- Check the expected database before starting automation. When existing data is missing or multiple profiles are found, show their paths and people/history counts instead of silently opening an empty list.
+- Recover a selected SQLite backup only into a missing database, with explicit confirmation. Keep existing databases and journals untouched. Installed and portable profiles remain separate.
+- Export/import includes channel badge designs and personal descriptions. Existing badge settings take precedence when merging. Older exports still work.
+
 ## 0.8.0 - 2026-11-08
 
 - Add a seventh badge mode: custom HTML/CSS with a live preview, variable reference, starter template and copyable AI brief.

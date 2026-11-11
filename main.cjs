@@ -94,7 +94,19 @@ app.on('second-instance',(_,argv)=>{if(win&&!startInTray(argv))showWindow();});
 app.whenReady().then(async()=>{
   if(!primaryInstance)return;
   fs.mkdirSync(app.getPath('userData'),{recursive:true});
-  await prepareProfile(app.getPath('userData'),app.getVersion());
+  const exeDir=path.dirname(process.execPath);
+  const alternatives=process.env.SHOUTOUT_DESK_TEST_DATA?[]:[path.join(app.getPath('appData'),'Shoutout Desk'),path.join(exeDir,'ShoutoutDesk-data'),path.join(exeDir,'..','ShoutoutDesk-data')];
+  await prepareProfile(app.getPath('userData'),app.getVersion(),{alternatives,confirmFresh:!smoke&&!process.env.SHOUTOUT_DESK_TEST_DATA,locale:app.getLocale(),ask:async view=>{
+    const keys=Object.keys(view.actions);
+    const {response}=await dialog.showMessageBox({type:'info',title:view.title,message:view.title,detail:view.detail,buttons:Object.values(view.actions),cancelId:keys.indexOf('close'),defaultId:keys.indexOf('close'),noLink:true});
+    const action=keys[response];
+    if(action==='folder')await shell.openPath(view.dir);
+    if(action==='browse'){
+      const pick=await dialog.showOpenDialog({title:view.actions.browse,defaultPath:view.initial,properties:['openFile']});
+      return {action,file:pick.filePaths[0]};
+    }
+    return {action};
+  }});
   store=new Store(path.join(app.getPath('userData'),'shoutouts.sqlite'));connection=loadPrivate('connection.json');
   diagnostics=new Diagnostics(app.getPath('userData'));
   store.setPrefs({enabled:true});session=new AppSession(store);
@@ -284,6 +296,7 @@ app.whenReady().then(async()=>{
   });
   connect();if(!smoke){auth.resume();updates.start();}setInterval(()=>session.touch(),HEARTBEAT_MS).unref();setInterval(()=>{if(!smoke)void engine?.tick();},1000).unref();setInterval(()=>{if(!smoke)void refreshStatus();},30000).unref();
 }).catch(error=>{
+  if(error.code==='PROFILE_CANCELLED'){app.quit();return;}
   dialog.showErrorBox('Shoutout Desk: запуск отменён','Не удалось безопасно подготовить данные. Не удаляйте папку данных; проверьте свободное место и права доступа.\n\n'+error.message);
   app.exit(1);
 });

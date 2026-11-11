@@ -2,9 +2,10 @@ const fs=require('node:fs'),path=require('node:path');
 const {DatabaseSync,backup}=require('node:sqlite');
 const {atomicWrite}=require('./setup.cjs');
 
-async function prepareProfile(directory,version){
+async function prepareProfile(directory,version,options={}){
   if(!/^\d+\.\d+\.\d+$/.test(version))throw Error('Invalid profile version');
   fs.mkdirSync(directory,{recursive:true});
+  await require('./profile-review.cjs').guard(directory,{...options,write:atomicWrite});
   const marker=path.join(directory,'profile-version.json');
   let previous=null;
   try{previous=JSON.parse(fs.readFileSync(marker,'utf8')).version;}catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}
